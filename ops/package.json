@@ -1,0 +1,21 @@
+{
+  "name": "@unspent/ops",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "launch": "tsx launch.ts",
+    "cycle": "tsx cycle.ts",
+    "typecheck": "tsc -p .",
+    "test": "echo 'run pnpm cycle against a local validator'"
+  },
+  "dependencies": {
+    "@solana-program/system": "^0.15.0",
+    "@solana-program/token": "^0.17.0",
+    "@solana/kit": "^8.4.0",
+    "@unspent/program": "workspace:*",
+    "@unspent/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
+  }
+}

@@ -1,0 +1,2411 @@
+{
+  "address": "5YSrsYtX6UnSx8KAbiD8RWM7UzNNXU3w5QhxSA2vvfkx",
+  "metadata": {
+    "name": "unspent",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Unspent: LLM inference credits as an SPL token, with onchain per-request reservations"
+  },
+  "instructions": [
+    {
+      "name": "activate_backup_gateway",
+      "discriminator": [
+        109,
+        176,
+        217,
+        227,
+        165,
+        233,
+        52,
+        254
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "apply_pending",
+      "discriminator": [
+        88,
+        86,
+        232,
+        48,
+        42,
+        150,
+        180,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "field",
+          "type": {
+            "defined": {
+              "name": "ConfigField"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "buy_credits",
+      "discriminator": [
+        14,
+        173,
+        58,
+        38,
+        248,
+        235,
+        115,
+        102
+      ],
+      "accounts": [
+        {
+          "name": "buyer",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "credit_mint",
+          "writable": true
+        },
+        {
+          "name": "reserve",
+          "writable": true
+        },
+        {
+          "name": "buyer_usdc",
+          "writable": true
+        },
+        {
+          "name": "buyer_credits",
+          "docs": [
+            "Credits go only to the buyer's own token account."
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "cancel_pending",
+      "discriminator": [
+        74,
+        87,
+        109,
+        242,
+        64,
+        192,
+        151,
+        71
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "field",
+          "type": {
+            "defined": {
+              "name": "ConfigField"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "deposit",
+      "discriminator": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "owner_credits",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "expire",
+      "discriminator": [
+        243,
+        83,
+        205,
+        58,
+        57,
+        201,
+        247,
+        146
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "reservation",
+          "writable": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "reservation.owner",
+                "account": "Reservation"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program",
+          "address": "5YSrsYtX6UnSx8KAbiD8RWM7UzNNXU3w5QhxSA2vvfkx"
+        },
+        {
+          "name": "program_data"
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "credit_mint"
+        },
+        {
+          "name": "usdc_mint",
+          "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        },
+        {
+          "name": "reserve",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializeParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "propose_gateway_backup",
+      "discriminator": [
+        241,
+        121,
+        24,
+        157,
+        223,
+        61,
+        82,
+        213
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "key",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "propose_treasury",
+      "discriminator": [
+        235,
+        240,
+        222,
+        34,
+        106,
+        66,
+        137,
+        236
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "new_treasury"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "redeem",
+      "discriminator": [
+        184,
+        12,
+        86,
+        149,
+        70,
+        196,
+        97,
+        225
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "credit_mint",
+          "writable": true
+        },
+        {
+          "name": "reserve",
+          "writable": true
+        },
+        {
+          "name": "owner_credits",
+          "writable": true
+        },
+        {
+          "name": "owner_usdc",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "reserve",
+      "discriminator": [
+        92,
+        99,
+        244,
+        209,
+        28,
+        65,
+        213,
+        157
+      ],
+      "accounts": [
+        {
+          "name": "gateway",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reservation",
+          "docs": [
+            "A live reservation with the same request_id makes this init fail, so a request can't be reserved twice."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "request_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "request_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "type": "pubkey"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "revoke_gateway",
+      "discriminator": [
+        4,
+        35,
+        130,
+        62,
+        98,
+        227,
+        104,
+        180
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_limit",
+      "discriminator": [
+        51,
+        224,
+        252,
+        238,
+        154,
+        84,
+        60,
+        174
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "field",
+          "type": {
+            "defined": {
+              "name": "ConfigField"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_my_reserve_cap",
+      "discriminator": [
+        29,
+        165,
+        151,
+        173,
+        230,
+        76,
+        154,
+        93
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "user"
+          ]
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "cap",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_pause",
+      "discriminator": [
+        63,
+        32,
+        154,
+        2,
+        56,
+        103,
+        79,
+        45
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "target",
+          "type": {
+            "defined": {
+              "name": "PauseTarget"
+            }
+          }
+        },
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "settle",
+      "discriminator": [
+        175,
+        42,
+        185,
+        87,
+        144,
+        131,
+        102,
+        212
+      ],
+      "accounts": [
+        {
+          "name": "gateway",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "reservation",
+          "writable": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "reservation.owner",
+                "account": "Reservation"
+              }
+            ]
+          }
+        },
+        {
+          "name": "credit_mint",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "reserve",
+          "writable": true
+        },
+        {
+          "name": "treasury",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "actual",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "settle_many",
+      "discriminator": [
+        160,
+        73,
+        49,
+        36,
+        154,
+        79,
+        166,
+        53
+      ],
+      "accounts": [
+        {
+          "name": "gateway",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "rent_payer",
+          "writable": true
+        },
+        {
+          "name": "credit_mint",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "reserve",
+          "writable": true
+        },
+        {
+          "name": "treasury",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "actuals",
+          "type": {
+            "vec": "u64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "shutdown",
+      "discriminator": [
+        146,
+        204,
+        241,
+        213,
+        86,
+        21,
+        253,
+        211
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "sweep_surplus",
+      "discriminator": [
+        144,
+        67,
+        197,
+        177,
+        218,
+        200,
+        50,
+        24
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "credit_mint",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "reserve",
+          "writable": true
+        },
+        {
+          "name": "treasury",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdraw",
+      "discriminator": [
+        183,
+        18,
+        70,
+        156,
+        148,
+        109,
+        161,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "user"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "owner_credits",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    },
+    {
+      "name": "Reservation",
+      "discriminator": [
+        188,
+        235,
+        0,
+        111,
+        208,
+        253,
+        247,
+        212
+      ]
+    },
+    {
+      "name": "UserAccount",
+      "discriminator": [
+        211,
+        33,
+        136,
+        16,
+        186,
+        110,
+        242,
+        127
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "BackupGatewayActivated",
+      "discriminator": [
+        88,
+        32,
+        140,
+        167,
+        75,
+        121,
+        175,
+        185
+      ]
+    },
+    {
+      "name": "ChangeApplied",
+      "discriminator": [
+        226,
+        1,
+        224,
+        100,
+        192,
+        110,
+        58,
+        24
+      ]
+    },
+    {
+      "name": "ChangeCancelled",
+      "discriminator": [
+        139,
+        179,
+        97,
+        81,
+        214,
+        21,
+        119,
+        93
+      ]
+    },
+    {
+      "name": "ChangeProposed",
+      "discriminator": [
+        170,
+        10,
+        10,
+        8,
+        244,
+        196,
+        146,
+        151
+      ]
+    },
+    {
+      "name": "CreditsBought",
+      "discriminator": [
+        176,
+        237,
+        13,
+        63,
+        123,
+        84,
+        185,
+        118
+      ]
+    },
+    {
+      "name": "Deposited",
+      "discriminator": [
+        111,
+        141,
+        26,
+        45,
+        161,
+        35,
+        100,
+        57
+      ]
+    },
+    {
+      "name": "Expired",
+      "discriminator": [
+        197,
+        227,
+        104,
+        103,
+        133,
+        50,
+        207,
+        161
+      ]
+    },
+    {
+      "name": "GatewayRevoked",
+      "discriminator": [
+        20,
+        246,
+        78,
+        99,
+        247,
+        217,
+        138,
+        249
+      ]
+    },
+    {
+      "name": "LimitChanged",
+      "discriminator": [
+        73,
+        165,
+        99,
+        157,
+        14,
+        3,
+        189,
+        14
+      ]
+    },
+    {
+      "name": "PauseSet",
+      "discriminator": [
+        175,
+        57,
+        198,
+        136,
+        192,
+        66,
+        204,
+        73
+      ]
+    },
+    {
+      "name": "Redeemed",
+      "discriminator": [
+        14,
+        29,
+        183,
+        71,
+        31,
+        165,
+        107,
+        38
+      ]
+    },
+    {
+      "name": "ReserveCapSet",
+      "discriminator": [
+        26,
+        170,
+        94,
+        170,
+        37,
+        10,
+        89,
+        94
+      ]
+    },
+    {
+      "name": "Reserved",
+      "discriminator": [
+        113,
+        14,
+        94,
+        126,
+        13,
+        203,
+        14,
+        65
+      ]
+    },
+    {
+      "name": "Settled",
+      "discriminator": [
+        232,
+        210,
+        40,
+        17,
+        142,
+        124,
+        145,
+        238
+      ]
+    },
+    {
+      "name": "ShutDown",
+      "discriminator": [
+        104,
+        138,
+        121,
+        236,
+        106,
+        146,
+        235,
+        37
+      ]
+    },
+    {
+      "name": "SurplusSwept",
+      "discriminator": [
+        10,
+        228,
+        130,
+        83,
+        221,
+        240,
+        210,
+        32
+      ]
+    },
+    {
+      "name": "Withdrawn",
+      "discriminator": [
+        20,
+        89,
+        223,
+        198,
+        194,
+        124,
+        219,
+        13
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "NotUpgradeAuthority",
+      "msg": "Only the program's upgrade authority can initialize"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidMint",
+      "msg": "Mint does not meet the requirements"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidTreasury",
+      "msg": "Treasury must be a USDC token account other than the reserve"
+    },
+    {
+      "code": 6003,
+      "name": "ShutDown",
+      "msg": "Unspent is shut down"
+    },
+    {
+      "code": 6004,
+      "name": "NotShutDown",
+      "msg": "Unspent is not shut down"
+    },
+    {
+      "code": 6005,
+      "name": "BuyPaused",
+      "msg": "Buying is paused"
+    },
+    {
+      "code": 6006,
+      "name": "DepositPaused",
+      "msg": "Deposits are paused"
+    },
+    {
+      "code": 6007,
+      "name": "GatewayPaused",
+      "msg": "Reservations are paused"
+    },
+    {
+      "code": 6008,
+      "name": "ZeroAmount",
+      "msg": "Amount must be positive"
+    },
+    {
+      "code": 6009,
+      "name": "AmountTooSmall",
+      "msg": "Amount is below the minimum"
+    },
+    {
+      "code": 6010,
+      "name": "AmountTooLarge",
+      "msg": "Amount is above the per-instruction maximum"
+    },
+    {
+      "code": 6011,
+      "name": "SupplyCapExceeded",
+      "msg": "Purchase would exceed the supply cap"
+    },
+    {
+      "code": 6012,
+      "name": "InsufficientAvailable",
+      "msg": "Not enough available balance"
+    },
+    {
+      "code": 6013,
+      "name": "ReservationTooLarge",
+      "msg": "Reservation exceeds the per-request maximum"
+    },
+    {
+      "code": 6014,
+      "name": "UserHoldLimitExceeded",
+      "msg": "Reservation exceeds the per-user hold limit"
+    },
+    {
+      "code": 6015,
+      "name": "NotGateway",
+      "msg": "Signer is not the active gateway"
+    },
+    {
+      "code": 6016,
+      "name": "ActualExceedsReserved",
+      "msg": "Actual cost exceeds the reserved amount"
+    },
+    {
+      "code": 6017,
+      "name": "BurnCapExceeded",
+      "msg": "Burn cap for the current window exceeded"
+    },
+    {
+      "code": 6018,
+      "name": "NotExpired",
+      "msg": "Reservation has not expired"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidReservation",
+      "msg": "Account is not a valid reservation"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidUserAccount",
+      "msg": "Account is not the reservation owner's user account"
+    },
+    {
+      "code": 6021,
+      "name": "WrongOwner",
+      "msg": "Reservation belongs to another owner"
+    },
+    {
+      "code": 6022,
+      "name": "WrongPayer",
+      "msg": "Rent recipient does not match the reservation payer"
+    },
+    {
+      "code": 6023,
+      "name": "DuplicateReservation",
+      "msg": "Duplicate reservation in batch"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidRemainingAccounts",
+      "msg": "Remaining accounts must come in pairs"
+    },
+    {
+      "code": 6025,
+      "name": "BatchLengthMismatch",
+      "msg": "Batch actuals and accounts do not match"
+    },
+    {
+      "code": 6026,
+      "name": "OutOfBounds",
+      "msg": "Value is outside the allowed bounds"
+    },
+    {
+      "code": 6027,
+      "name": "NotALimit",
+      "msg": "Field is not a limit"
+    },
+    {
+      "code": 6028,
+      "name": "NoPendingChange",
+      "msg": "No pending change for this field"
+    },
+    {
+      "code": 6029,
+      "name": "PendingNotReady",
+      "msg": "Pending change is not effective yet"
+    },
+    {
+      "code": 6030,
+      "name": "NoBackupGateway",
+      "msg": "No backup gateway is set"
+    },
+    {
+      "code": 6031,
+      "name": "Insolvent",
+      "msg": "Vault or reserve is below what it owes"
+    },
+    {
+      "code": 6032,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow"
+    }
+  ],
+  "types": [
+    {
+      "name": "BackupGatewayActivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "gateway",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeApplied",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field",
+            "type": {
+              "defined": {
+                "name": "ConfigField"
+              }
+            }
+          },
+          {
+            "name": "value",
+            "type": "u64"
+          },
+          {
+            "name": "key",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field",
+            "type": {
+              "defined": {
+                "name": "ConfigField"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeProposed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field",
+            "type": {
+              "defined": {
+                "name": "ConfigField"
+              }
+            }
+          },
+          {
+            "name": "value",
+            "type": "u64"
+          },
+          {
+            "name": "key",
+            "type": "pubkey"
+          },
+          {
+            "name": "effective_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "docs": [
+              "Squads multisig without time lock: immediate risk-reducing actions; risk-increasing ones go through admin_delay."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "gateway",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "gateway_backup",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "treasury",
+            "docs": [
+              "USDC token account that receives the USDC of burned credits."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "credit_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "reserve",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "buy_paused",
+            "type": "bool"
+          },
+          {
+            "name": "deposit_paused",
+            "type": "bool"
+          },
+          {
+            "name": "gateway_paused",
+            "type": "bool"
+          },
+          {
+            "name": "shut_down",
+            "type": "bool"
+          },
+          {
+            "name": "max_buy_per_ix",
+            "type": "u64"
+          },
+          {
+            "name": "supply_cap",
+            "type": "u64"
+          },
+          {
+            "name": "max_reservation",
+            "type": "u64"
+          },
+          {
+            "name": "max_reserved_per_user",
+            "type": "u64"
+          },
+          {
+            "name": "burn_cap_per_window",
+            "type": "u64"
+          },
+          {
+            "name": "reservation_ttl",
+            "type": "u64"
+          },
+          {
+            "name": "admin_delay",
+            "type": "u64"
+          },
+          {
+            "name": "window_start",
+            "type": "i64"
+          },
+          {
+            "name": "window_burned",
+            "type": "u64"
+          },
+          {
+            "name": "pending",
+            "docs": [
+              "One slot per ConfigField, indexed by ConfigField::index()."
+            ],
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "PendingChange"
+                  }
+                },
+                9
+              ]
+            }
+          },
+          {
+            "name": "total_user_balance",
+            "type": "u64"
+          },
+          {
+            "name": "active_reserved",
+            "type": "u64"
+          },
+          {
+            "name": "total_burned",
+            "type": "u64"
+          },
+          {
+            "name": "total_released",
+            "type": "u64"
+          },
+          {
+            "name": "total_redeemed",
+            "type": "u64"
+          },
+          {
+            "name": "total_swept_usdc",
+            "type": "u64"
+          },
+          {
+            "name": "total_swept_credits",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConfigField",
+      "docs": [
+        "Fields that can change through `set_limit`, `propose_*` and `apply_pending` (brief 6.1, 6.3)."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "MaxBuyPerIx"
+          },
+          {
+            "name": "SupplyCap"
+          },
+          {
+            "name": "MaxReservation"
+          },
+          {
+            "name": "MaxReservedPerUser"
+          },
+          {
+            "name": "BurnCapPerWindow"
+          },
+          {
+            "name": "ReservationTtl"
+          },
+          {
+            "name": "AdminDelay"
+          },
+          {
+            "name": "GatewayBackup"
+          },
+          {
+            "name": "Treasury"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreditsBought",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Deposited",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Expired",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "request_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GatewayRevoked",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    },
+    {
+      "name": "InitializeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "gateway",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "max_buy_per_ix",
+            "type": "u64"
+          },
+          {
+            "name": "supply_cap",
+            "type": "u64"
+          },
+          {
+            "name": "max_reservation",
+            "type": "u64"
+          },
+          {
+            "name": "max_reserved_per_user",
+            "type": "u64"
+          },
+          {
+            "name": "burn_cap_per_window",
+            "type": "u64"
+          },
+          {
+            "name": "reservation_ttl",
+            "type": "u64"
+          },
+          {
+            "name": "admin_delay",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LimitChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field",
+            "type": {
+              "defined": {
+                "name": "ConfigField"
+              }
+            }
+          },
+          {
+            "name": "value",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PauseSet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "target",
+            "type": {
+              "defined": {
+                "name": "PauseTarget"
+              }
+            }
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PauseTarget",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Deposit"
+          },
+          {
+            "name": "Gateway"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PendingChange",
+      "docs": [
+        "A delayed change of one field. `effective_at == 0` means no change is pending."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "value",
+            "type": "u64"
+          },
+          {
+            "name": "key",
+            "type": "pubkey"
+          },
+          {
+            "name": "effective_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Redeemed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Reservation",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "docs": [
+              "First field after the discriminator so wallets can find their reservations with getProgramAccounts (memcmp at 8)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "request_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          },
+          {
+            "name": "payer",
+            "docs": [
+              "Who paid the rent; gets it back when the reservation closes."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReserveCapSet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "cap",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Reserved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "request_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Settled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "request_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reserved",
+            "type": "u64"
+          },
+          {
+            "name": "actual",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ShutDown",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    },
+    {
+      "name": "SurplusSwept",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "usdc",
+            "type": "u64"
+          },
+          {
+            "name": "credits",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "balance",
+            "docs": [
+              "Credits of this user in the vault, including what is reserved."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "reserved",
+            "docs": [
+              "Part of balance held for running requests."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "reserve_cap",
+            "docs": [
+              "The user's own hold limit; 0 = the global max_reserved_per_user."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Withdrawn",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "CONFIG_SEED",
+      "type": "bytes",
+      "value": "[99, 111, 110, 102, 105, 103]"
+    },
+    {
+      "name": "RESERVATION_SEED",
+      "type": "bytes",
+      "value": "[114, 101, 115]"
+    },
+    {
+      "name": "RESERVE_SEED",
+      "type": "bytes",
+      "value": "[114, 101, 115, 101, 114, 118, 101]"
+    },
+    {
+      "name": "USER_SEED",
+      "type": "bytes",
+      "value": "[117, 115, 101, 114]"
+    },
+    {
+      "name": "VAULT_SEED",
+      "type": "bytes",
+      "value": "[118, 97, 117, 108, 116]"
+    }
+  ]
+}

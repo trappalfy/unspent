@@ -1,0 +1,19 @@
+[toolchain]
+anchor_version = "1.2.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+unspent = "5YSrsYtX6UnSx8KAbiD8RWM7UzNNXU3w5QhxSA2vvfkx"
+
+[programs.mainnet]
+unspent = "5YSrsYtX6UnSx8KAbiD8RWM7UzNNXU3w5QhxSA2vvfkx"
+
+[provider]
+cluster = "localnet"
+wallet = "keys/deployer-keypair.json"
+
+[scripts]
+test = "cargo test -p unspent"

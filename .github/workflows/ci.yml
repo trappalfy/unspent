@@ -21,3 +21,20 @@ jobs:
       - run: pnpm --filter @unspent/web build
         env:
           NEXT_PUBLIC_SOLANA_NETWORK: devnet
+
+  program:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: rustup show
+      - name: Install Agave CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v4.1.2/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+      - uses: Swatinem/rust-cache@v2
+      - name: Build program (sBPF v3)
+        run: cargo build-sbf --manifest-path programs/unspent/Cargo.toml --arch v3
+      - run: cargo clippy -p unspent --lib -- -D warnings
+      - run: cargo test -p unspent --release
+      - run: cargo install cargo-audit --locked && cargo audit

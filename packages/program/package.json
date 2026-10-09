@@ -1,0 +1,22 @@
+{
+  "name": "@unspent/program",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "node scripts/generate.mjs",
+    "typecheck": "tsc -p .",
+    "test": "echo 'covered by program and gateway tests'"
+  },
+  "dependencies": {
+    "@solana/kit": "^8.4.0",
+    "@solana/program-client-core": "^8.4.0"
+  },
+  "devDependencies": {
+    "@codama/nodes-from-anchor": "^1.5.6",
+    "@codama/renderers-js": "^2.5.0",
+    "codama": "*"
+  }
+}
