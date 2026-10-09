@@ -13,6 +13,7 @@
     "migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "drizzle-orm": "^0.45.4",
     "postgres": "^3.4.9"
   },

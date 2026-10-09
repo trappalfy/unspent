@@ -1,0 +1,1030 @@
+{
+  "id": "8f4dcd64-d2fa-4adb-be7d-d45967a78d9a",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.api_keys": {
+      "name": "api_keys",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "wallet": {
+          "name": "wallet",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "network": {
+          "name": "network",
+          "type": "network",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "key_hash": {
+          "name": "key_hash",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last4": {
+          "name": "last4",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "daily_limit_ucr": {
+          "name": "daily_limit_ucr",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "allowed_models": {
+          "name": "allowed_models",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "api_key_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_used_at": {
+          "name": "last_used_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "api_keys_hash_uq": {
+          "name": "api_keys_hash_uq",
+          "columns": [
+            {
+              "expression": "key_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "api_keys_wallet_idx": {
+          "name": "api_keys_wallet_idx",
+          "columns": [
+            {
+              "expression": "wallet",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "api_keys_wallet_wallets_address_fk": {
+          "name": "api_keys_wallet_wallets_address_fk",
+          "tableFrom": "api_keys",
+          "tableTo": "wallets",
+          "columnsFrom": [
+            "wallet"
+          ],
+          "columnsTo": [
+            "address"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.chain_events": {
+      "name": "chain_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "network": {
+          "name": "network",
+          "type": "network",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signature": {
+          "name": "signature",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slot": {
+          "name": "slot",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "block_time": {
+          "name": "block_time",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_index": {
+          "name": "event_index",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner": {
+          "name": "owner",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data": {
+          "name": "data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "chain_events_sig_idx_uq": {
+          "name": "chain_events_sig_idx_uq",
+          "columns": [
+            {
+              "expression": "network",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "signature",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "event_index",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "chain_events_owner_idx": {
+          "name": "chain_events_owner_idx",
+          "columns": [
+            {
+              "expression": "owner",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slot",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "chain_events_name_idx": {
+          "name": "chain_events_name_idx",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slot",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.idempotency_keys": {
+      "name": "idempotency_keys",
+      "schema": "",
+      "columns": {
+        "wallet": {
+          "name": "wallet",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "key_hash": {
+          "name": "key_hash",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body_hash": {
+          "name": "body_hash",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_uuid": {
+          "name": "request_uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "idempotency_expires_idx": {
+          "name": "idempotency_expires_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "idempotency_keys_request_uuid_requests_id_fk": {
+          "name": "idempotency_keys_request_uuid_requests_id_fk",
+          "tableFrom": "idempotency_keys",
+          "tableTo": "requests",
+          "columnsFrom": [
+            "request_uuid"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "idempotency_keys_wallet_key_hash_pk": {
+          "name": "idempotency_keys_wallet_key_hash_pk",
+          "columns": [
+            "wallet",
+            "key_hash"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.indexer_cursor": {
+      "name": "indexer_cursor",
+      "schema": "",
+      "columns": {
+        "network": {
+          "name": "network",
+          "type": "network",
+          "typeSchema": "public",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "last_signature": {
+          "name": "last_signature",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_slot": {
+          "name": "last_slot",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.reconciliation": {
+      "name": "reconciliation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "day": {
+          "name": "day",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider": {
+          "name": "provider",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "db_cost_pusd": {
+          "name": "db_cost_pusd",
+          "type": "numeric(39, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_cost_pusd": {
+          "name": "provider_cost_pusd",
+          "type": "numeric(39, 0)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "diff_bps": {
+          "name": "diff_bps",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "details": {
+          "name": "details",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "reconciliation_day_provider_uq": {
+          "name": "reconciliation_day_provider_uq",
+          "columns": [
+            {
+              "expression": "day",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.requests": {
+      "name": "requests",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "api_key_id": {
+          "name": "api_key_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wallet": {
+          "name": "wallet",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "network": {
+          "name": "network",
+          "type": "network",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider": {
+          "name": "provider",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endpoint": {
+          "name": "endpoint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "request_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reserved_ucr": {
+          "name": "reserved_ucr",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prices": {
+          "name": "prices",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "input_tokens": {
+          "name": "input_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "output_tokens": {
+          "name": "output_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cache_read_tokens": {
+          "name": "cache_read_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cache_write_5m_tokens": {
+          "name": "cache_write_5m_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cache_write_1h_tokens": {
+          "name": "cache_write_1h_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "web_search_requests": {
+          "name": "web_search_requests",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cost_pusd": {
+          "name": "cost_pusd",
+          "type": "numeric(39, 0)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cost_ucr": {
+          "name": "cost_ucr",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "charged_ucr": {
+          "name": "charged_ucr",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimated": {
+          "name": "estimated",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "reserve_sig": {
+          "name": "reserve_sig",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reserve_last_valid_block_height": {
+          "name": "reserve_last_valid_block_height",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "settle_sig": {
+          "name": "settle_sig",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "provider_request_id": {
+          "name": "provider_request_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cc_session_id": {
+          "name": "cc_session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cc_agent_id": {
+          "name": "cc_agent_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "http_status": {
+          "name": "http_status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_code": {
+          "name": "error_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "dispatched_at": {
+          "name": "dispatched_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_progress_at": {
+          "name": "last_progress_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "settled_at": {
+          "name": "settled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duration_ms": {
+          "name": "duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "requests_request_id_uq": {
+          "name": "requests_request_id_uq",
+          "columns": [
+            {
+              "expression": "request_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "requests_wallet_created_idx": {
+          "name": "requests_wallet_created_idx",
+          "columns": [
+            {
+              "expression": "wallet",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "requests_key_created_idx": {
+          "name": "requests_key_created_idx",
+          "columns": [
+            {
+              "expression": "api_key_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "requests_open_idx": {
+          "name": "requests_open_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "status in ('reserving','reserved','dispatched','completed','reserve_timeout')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "requests_api_key_id_api_keys_id_fk": {
+          "name": "requests_api_key_id_api_keys_id_fk",
+          "tableFrom": "requests",
+          "tableTo": "api_keys",
+          "columnsFrom": [
+            "api_key_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.settle_queue": {
+      "name": "settle_queue",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "request_uuid": {
+          "name": "request_uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner": {
+          "name": "owner",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actual_ucr": {
+          "name": "actual_ucr",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "settle_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "tx_sig": {
+          "name": "tx_sig",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "settle_queue_request_uq": {
+          "name": "settle_queue_request_uq",
+          "columns": [
+            {
+              "expression": "request_uuid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "settle_queue_pending_idx": {
+          "name": "settle_queue_pending_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "settle_queue_request_uuid_requests_id_fk": {
+          "name": "settle_queue_request_uuid_requests_id_fk",
+          "tableFrom": "settle_queue",
+          "tableTo": "requests",
+          "columnsFrom": [
+            "request_uuid"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.wallets": {
+      "name": "wallets",
+      "schema": "",
+      "columns": {
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "blocked": {
+          "name": "blocked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.api_key_status": {
+      "name": "api_key_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "revoked"
+      ]
+    },
+    "public.network": {
+      "name": "network",
+      "schema": "public",
+      "values": [
+        "localnet",
+        "devnet",
+        "mainnet"
+      ]
+    },
+    "public.request_status": {
+      "name": "request_status",
+      "schema": "public",
+      "values": [
+        "reserving",
+        "reserved",
+        "dispatched",
+        "completed",
+        "settled",
+        "reserve_timeout",
+        "released",
+        "expired",
+        "unknown"
+      ]
+    },
+    "public.settle_status": {
+      "name": "settle_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "sent",
+        "confirmed",
+        "skipped_expired"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

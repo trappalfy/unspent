@@ -255,9 +255,12 @@ importers:
 
   packages/db:
     dependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.8
+        version: 0.5.8
       drizzle-orm:
         specifier: ^0.45.4
-        version: 0.45.4(postgres@3.4.9)
+        version: 0.45.4(@electric-sql/pglite@0.5.8)(postgres@3.4.9)
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
@@ -292,9 +295,18 @@ importers:
       '@hono/node-server':
         specifier: ^2.1.4
         version: 2.1.4(hono@4.13.13)
+      '@solana-program/compute-budget':
+        specifier: ^0.19.0
+        version: 0.19.0(@solana/kit@8.4.0(typescript@6.0.3))
+      '@solana/kit':
+        specifier: ^8.4.0
+        version: 8.4.0(typescript@6.0.3)
       '@unspent/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@unspent/program':
+        specifier: workspace:*
+        version: link:../../packages/program
       '@unspent/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -302,6 +314,9 @@ importers:
         specifier: ^4.13.13
         version: 4.13.13
     devDependencies:
+      '@solana-program/token':
+        specifier: ^0.17.0
+        version: 0.17.0(@solana/kit@8.4.0(typescript@6.0.3))
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
@@ -420,6 +435,9 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@electric-sql/pglite@0.5.8':
+    resolution: {integrity: sha512-n9tsbUOhwx2epK1V0ZG9Ar4SHWUju04dhmzZXiSBXwBoleOvIfals33NAaWgagQVAL4Rbvx/Ptsu3P+pA09f6Q==}
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -1228,6 +1246,11 @@ packages:
 
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
+
+  '@solana-program/compute-budget@0.19.0':
+    resolution: {integrity: sha512-YV5T0MnTM//avw46UBvWswZw3KZx+HgqohPZkH/OonEHRX4+MSO9wV/8XePEDDyu/geHtdmdEXY/HlgRGJKa8A==}
+    peerDependencies:
+      '@solana/kit': ^8.3.0
 
   '@solana-program/system@0.15.0':
     resolution: {integrity: sha512-xE08wZCyNRhOaO/XNRd9A3kSLfUrTe/BnmAHhql8uqc2eriNy2ZmnvaGRrs0m+kOSihvUbANzHljmJsTzGL5kg==}
@@ -2601,6 +2624,8 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
+  '@electric-sql/pglite@0.5.8': {}
+
   '@emnapi/runtime@1.11.3':
     dependencies:
       tslib: 2.8.1
@@ -3050,6 +3075,10 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.1': {}
+
+  '@solana-program/compute-budget@0.19.0(@solana/kit@8.4.0(typescript@6.0.3))':
+    dependencies:
+      '@solana/kit': 8.4.0(typescript@6.0.3)
 
   '@solana-program/system@0.15.0(@solana/kit@8.4.0(typescript@6.0.3))':
     dependencies:
@@ -3744,8 +3773,9 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.15
 
-  drizzle-orm@0.45.4(postgres@3.4.9):
+  drizzle-orm@0.45.4(@electric-sql/pglite@0.5.8)(postgres@3.4.9):
     optionalDependencies:
+      '@electric-sql/pglite': 0.5.8
       postgres: 3.4.9
 
   dunder-proto@1.0.1:
