@@ -17,7 +17,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Indexer, type IndexerOptions, type IndexerSubscriptions } from "../src/indexer";
 import { createLogger } from "../src/log";
-import { eventTotals, recentSettlements, walletHistory } from "../src/queries";
+import { eventTotals, recentSettlements, settlementsSince, walletHistory } from "../src/queries";
 import { FakeRpc } from "./fakeRpc";
 import { ALICE, BOB, data, hexOf, invocation, JUPITER, ours, requestId } from "./logs";
 
@@ -299,6 +299,8 @@ describe("queries", () => {
     ]);
     expect(settlements[0]!.signature).toBe(rpc.txs[5]!.signature);
     expect(await recentSettlements(db, "localnet", 1)).toHaveLength(1);
+    expect(await settlementsSince(db, "localnet", new Date(0))).toBe(2);
+    expect(await settlementsSince(db, "localnet", new Date(Date.now() + 86_400_000 * 365 * 100))).toBe(0);
 
     expect(await eventTotals(db, "localnet")).toEqual({
       bought: 150n,

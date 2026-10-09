@@ -360,6 +360,7 @@ async function main() {
     return (await page.getByRole("cell", { name: `${owner.slice(0, 4)}…${owner.slice(-4)}` }).count()) >= 1;
   });
   const p2 = (await readProgram(rpc))!;
+  await sleep(1500); // figures roll into place once on first view
   const text = (await page.locator("main").textContent()) ?? "";
   ok("reserve: circulation equals mint supply", text.includes(formatCredits(p2.supply, 2)));
   ok("reserve: burned equals total_burned", text.includes(formatCredits(p2.totalBurned, 2)));

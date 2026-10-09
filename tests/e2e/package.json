@@ -5,7 +5,8 @@
   "scripts": {
     "ui": "tsx ui.ts",
     "typecheck": "tsc -p .",
-    "test": "echo 'browser e2e: pnpm --filter @unspent/e2e ui (needs Surfpool + devdb + Chrome)'"
+    "test": "echo 'browser e2e: pnpm --filter @unspent/e2e ui (needs Surfpool + devdb + Chrome)'",
+    "hero": "tsx hero.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.4",

@@ -178,6 +178,134 @@ input[type="checkbox"] {
   border: 0;
 }
 
+/* AsciiHero (brief 11.3): 2392:1240 art on desktop with the copy over its empty left 40%; on phones a
+   max(420px, 62svh) art cropped to the right, copy below. */
+.hero {
+  position: relative;
+}
+.hero-art {
+  position: relative;
+  width: 100%;
+  height: max(420px, 62svh);
+  overflow: hidden;
+  background: var(--bg);
+  touch-action: pan-y;
+}
+.hero-art canvas,
+.hero-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.hero-art img {
+  display: none;
+  object-fit: cover;
+  object-position: right center;
+}
+.hero-art[data-mode="static"] img {
+  display: block;
+}
+@media (min-width: 900px) {
+  .hero-art {
+    height: auto;
+    aspect-ratio: 2392 / 1240;
+    min-height: 560px;
+  }
+  .hero-copy {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+  }
+  /* The copy stays inside the art's empty left 40%, starting at the page grid. */
+  .hero-copy-inner {
+    max-width: calc(40vw - max(32px, (100vw - 1280px) / 2 + 32px) - 16px);
+  }
+  .hero-copy a,
+  .hero-copy button,
+  .hero-copy [aria-disabled] {
+    pointer-events: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-art img {
+    display: block;
+  }
+  .hero-art canvas {
+    display: none;
+  }
+}
+
+/* Problem section background logs (brief 11.4): one line up every 1.5 s. */
+.logs {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--dim);
+  font: 400 12px / 20px var(--mono);
+  white-space: pre;
+  mask-image: linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
+  pointer-events: none;
+  user-select: none;
+}
+.logs-track {
+  animation: logs-up calc(var(--n) * 1.5s) steps(var(--n)) infinite;
+}
+.logs-line {
+  height: 20px;
+}
+@keyframes logs-up {
+  to {
+    transform: translateY(calc(var(--n) * -20px));
+  }
+}
+.logs-exp {
+  animation: logs-expire 2.4s ease-out both;
+}
+@keyframes logs-expire {
+  0%,
+  40% {
+    text-decoration: none;
+    opacity: 1;
+  }
+  55% {
+    text-decoration: line-through;
+    opacity: 1;
+  }
+  100% {
+    text-decoration: line-through;
+    opacity: 0.25;
+  }
+}
+
+/* FAQ accordion: native <details>, keyboard accessible. */
+.faq summary {
+  list-style: none;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary::after {
+  content: "+";
+  color: var(--mute);
+}
+.faq[open] summary::after {
+  content: "–";
+}
+
+/* Terminal cursor █ */
+.caret {
+  animation: caret 1.1s steps(1) infinite;
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

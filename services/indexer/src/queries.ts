@@ -1,7 +1,7 @@
 // Read side of chain_events for the app and the /reserve page. Rows come in chain order (slot, then insertion
 // order, which the indexer keeps oldest first), so (slot, id) is a stable newest-first sort and pagination key.
 
-import { and, chainEvents, type Db, desc, eq, inArray, sql } from "@unspent/db";
+import { and, chainEvents, type Db, desc, eq, gte, inArray, sql } from "@unspent/db";
 import type { Network } from "@unspent/shared";
 
 export type Settlement = {
@@ -75,6 +75,21 @@ export async function recentSettlements(db: Db, network: Network, limit = 50): P
       actual: BigInt(str(d, "actual")),
     };
   });
+}
+
+/** Requests settled (one Settled event each) since a time, for "requests settled in the last 24h". */
+export async function settlementsSince(db: Db, network: Network, since: Date): Promise<number> {
+  const [r] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(chainEvents)
+    .where(
+      and(
+        eq(chainEvents.network, network),
+        eq(chainEvents.name, "Settled"),
+        gte(chainEvents.blockTime, since),
+      ),
+    );
+  return Number(r?.n ?? 0);
 }
 
 export async function walletHistory(

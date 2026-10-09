@@ -4,7 +4,8 @@ import { formatCredits } from "@unspent/shared";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AutoRefresh } from "@/components/AutoRefresh";
-import { Credits, Empty, Stat } from "@/components/app/ui";
+import { Empty, Stat } from "@/components/app/ui";
+import { Roll } from "@/components/Roll";
 import { countReservations, readReserveBalances } from "@/lib/chain/read";
 import { explorerAddress, explorerTx, network } from "@/lib/env";
 import { getDb } from "@/lib/server/db";
@@ -18,8 +19,15 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-/** USDC has 6 decimals like credits: same 2-digit floor formatting for large figures. */
-const usdc = (n: bigint) => formatCredits(n, 2);
+/** A large figure (credits or USDC, both 6 decimals) that rolls in once; the exact amount is in the tooltip. */
+function Fig({ v }: { v: bigint }) {
+  const exact = `${(Number(v) / 1e6).toFixed(6)}`;
+  return (
+    <span title={exact}>
+      <Roll text={v > 0n && v < 10_000n ? "<0.01" : formatCredits(v, 2)} />
+    </span>
+  );
+}
 
 function Addr({ label, value }: { label: string; value: string }) {
   return (
@@ -86,31 +94,33 @@ export default async function ReservePage() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Credits in circulation">
-          <Credits ucr={program.supply} />
+          <Fig v={program.supply} />
         </Stat>
-        <Stat label="USDC in reserve">{usdc(balances.reserveUsdc)}</Stat>
+        <Stat label="USDC in reserve">
+          <Fig v={balances.reserveUsdc} />
+        </Stat>
         <Stat label="Coverage" hint="reserve ÷ circulation, at least 100%">
-          {coverage(balances.reserveUsdc, program.supply)}
+          <Roll text={coverage(balances.reserveUsdc, program.supply)} />
         </Stat>
         <Stat label="On API balances" hint="credits in the program's vault">
-          <Credits ucr={program.totalUserBalance} />
+          <Fig v={program.totalUserBalance} />
         </Stat>
         <Stat label="Spent and burned" hint="credits spent on inference">
-          <Credits ucr={program.totalBurned} />
+          <Fig v={program.totalBurned} />
         </Stat>
         <Stat label="Sent to treasury" hint="USDC for burned credits, 1:1">
-          {usdc(program.totalReleased)}
+          <Fig v={program.totalReleased} />
         </Stat>
         <Stat label="Held right now" hint={`${holds} running request${holds === 1 ? "" : "s"}`}>
-          <Credits ucr={program.activeReserved} />
+          <Fig v={program.activeReserved} />
         </Stat>
         {program.shutDown ? (
           <Stat label="Redeemed" hint="after shutdown, 1 credit → 1 USDC">
-            <Credits ucr={program.totalRedeemed} />
+            <Fig v={program.totalRedeemed} />
           </Stat>
         ) : (
           <Stat label="Surplus withdrawn" hint="USDC above circulation only">
-            {usdc(program.totalSweptUsdc)}
+            <Fig v={program.totalSweptUsdc} />
           </Stat>
         )}
       </div>
