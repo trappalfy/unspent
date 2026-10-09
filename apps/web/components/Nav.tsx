@@ -7,7 +7,7 @@ export function Nav() {
     <header className="border-b border-line">
       <nav className="mx-auto flex max-w-[1280px] items-center justify-between gap-6 px-4 py-3 md:px-8">
         <Link href="/" className="flex shrink-0 items-center py-1">
-          <Wordmark className="text-[2.3px] sm:text-[3.4px] lg:text-[5px]" />
+          <Wordmark className="text-[1.5px] sm:text-[1.8px] lg:text-[2.2px]" />
         </Link>
         <div className="flex items-center gap-5 text-sm">
           <Link href="/#pricing" className="hidden sm:inline">
