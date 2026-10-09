@@ -1,0 +1,17 @@
+node_modules/
+.next/
+dist/
+out/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.DS_Store
+# Rust / Anchor
+target/
+.anchor/
+test-ledger/
+# keypairs never committed
+*-keypair.json
+keys/

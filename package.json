@@ -1,0 +1,22 @@
+{
+  "name": "unspent",
+  "private": true,
+  "packageManager": "pnpm@12.5.1",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r --parallel typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "pnpm -r test",
+    "dev:web": "pnpm --filter @unspent/web dev",
+    "dev:gateway": "pnpm --filter @unspent/gateway dev"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@types/node": "^24.0.0",
+    "typescript": "6.0.3",
+    "vitest": "^5.0.3"
+  }
+}
