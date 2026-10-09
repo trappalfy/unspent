@@ -4,7 +4,7 @@
 # the admin actions go through /app/admin in a real browser, as on mainnet. Never touches a public cluster.
 # Needs `pnpm --filter @unspent/db devdb` and Chrome.
 #
-#   ops/rehearse.sh            # launch + verify + /app/admin (pause, limits, backup key, freeze, shutdown)
+#   ops/rehearse.sh            # launch + verify + /app/admin (pause, limits, backup key, shutdown, close for SOL)
 #   RUN_UI=1 ops/rehearse.sh   # also the user-side browser e2e (tests/e2e/ui.ts) on the launched program
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -34,7 +34,7 @@ if [ "${RUN_UI:-}" = "1" ]; then
   (cd ../tests/e2e && pnpm ui)
 fi
 
-say "5. /app/admin with the admin wallet: pause, limit raise after admin_delay, backup key, freeze, shutdown"
-(cd ../tests/e2e && E2E_SHUTDOWN=1 pnpm admin)
+say "5. /app/admin with the admin wallet: pause, limit raise after admin_delay, backup key, shutdown, close the program"
+(cd ../tests/e2e && E2E_SHUTDOWN=1 E2E_CLOSE=1 pnpm admin)
 
 printf '\nREHEARSAL PASSED\n'

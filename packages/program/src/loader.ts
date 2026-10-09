@@ -1,5 +1,5 @@
 // BPF upgradeable loader instructions for the program's upgrade authority (brief 6.2, Q12): hand it over, replace
-// the code from a buffer, or freeze upgrades for good.
+// the code from a buffer, freeze upgrades for good, or close the program and take its rent back.
 
 import {
   AccountRole,
@@ -69,5 +69,27 @@ export async function getUpgradeProgramInstruction(p: {
       { address: p.authority.address, role: AccountRole.READONLY_SIGNER, signer: p.authority },
     ],
     data: Uint8Array.of(3, 0, 0, 0),
+  } as Instruction;
+}
+
+/**
+ * Close: deletes the program's code for good and sends its rent to `recipient`. The program can never run or be
+ * deployed at this address again; accounts it owns stay where they are, so whatever they hold must be out first.
+ */
+export async function getCloseProgramInstruction(p: {
+  authority: TransactionSigner;
+  recipient: Address;
+  program?: Address;
+}): Promise<Instruction> {
+  const program = p.program ?? UNSPENT_PROGRAM_ADDRESS;
+  return {
+    programAddress: BPF_UPGRADEABLE_LOADER,
+    accounts: [
+      { address: await findProgramDataAddress(program), role: AccountRole.WRITABLE },
+      { address: p.recipient, role: AccountRole.WRITABLE },
+      { address: p.authority.address, role: AccountRole.READONLY_SIGNER, signer: p.authority },
+      { address: program, role: AccountRole.WRITABLE },
+    ],
+    data: Uint8Array.of(5, 0, 0, 0),
   } as Instruction;
 }

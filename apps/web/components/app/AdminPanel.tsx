@@ -15,6 +15,7 @@ import {
   getActivateBackupGatewayInstructionAsync,
   getApplyPendingInstructionAsync,
   getCancelPendingInstructionAsync,
+  getCloseProgramInstruction,
   getProposeGatewayBackupInstructionAsync,
   getProposeTreasuryInstructionAsync,
   getRevokeGatewayInstructionAsync,
@@ -28,14 +29,20 @@ import {
 } from "@unspent/program";
 import { type ReactNode, useId, useState } from "react";
 import { browserRpc } from "@/lib/chain/browser";
-import type { PendingRow, ProgramState } from "@/lib/chain/read";
+import type { PendingRow, ProgramCode, ProgramState } from "@/lib/chain/read";
 import { prepare } from "@/lib/chain/tx";
 import { explorerAddress } from "@/lib/env";
-import { exactCredits, parseUnits } from "@/lib/format";
+import { exactCredits, formatSol, formatUnits, parseUnits } from "@/lib/format";
 import { TxButton, TxDone, useTxPlan } from "./Tx";
 import { Notice, Panel, Preview } from "./ui";
 
-type Props = { admin: string; program: ProgramState; upgradeAuthority: Address | null; now: number };
+type Props = {
+  admin: string;
+  program: ProgramState;
+  code: ProgramCode;
+  balances: { reserveUsdc: bigint; vaultCredits: bigint; holds: number };
+  now: number;
+};
 
 const LIMITS: { field: ConfigField; label: string; seconds?: true; get: (p: ProgramState) => bigint }[] = [
   { field: ConfigField.MaxBuyPerIx, label: "Max per purchase", get: (p) => p.maxBuyPerIx },
@@ -152,7 +159,8 @@ function Field({ label, children }: { label: string; children: (id: string) => R
   );
 }
 
-export function AdminPanel({ admin, program: p, upgradeAuthority, now }: Props) {
+export function AdminPanel({ admin, program: p, code, balances, now }: Props) {
+  const upgradeAuthority = code.authority;
   const signer = createNoopSigner(address(admin));
   const [limitField, setLimitField] = useState<ConfigField>(ConfigField.MaxReservation);
   const [limitValue, setLimitValue] = useState("");
@@ -183,6 +191,25 @@ export function AdminPanel({ admin, program: p, upgradeAuthority, now }: Props) 
     [PauseTarget.Gateway, "API requests", p.gatewayPaused],
   ];
   const frozen = upgradeAuthority === null;
+  // Closing is allowed only when nobody's money is left with the program (rule 0.6): no credits in circulation,
+  // an empty reserve and vault, no open holds.
+  const blockers = [
+    p.supply > 0n && `${exactCredits(p.supply)} are still in circulation: their holders redeem them first.`,
+    balances.reserveUsdc > 0n &&
+      `The reserve still holds ${formatUnits(balances.reserveUsdc, 6)} USDC: sweep the surplus first.`,
+    balances.vaultCredits > 0n && `The vault still holds ${exactCredits(balances.vaultCredits)}.`,
+    balances.holds > 0 && `${balances.holds} holds are still open: they settle or expire first.`,
+  ].filter((b): b is string => !!b);
+
+  if (code.closed)
+    return (
+      <Panel title="Program closed">
+        <p className="text-sm">
+          The program&apos;s code is deleted and its SOL deposit went back to the recipient. Nothing can run
+          here any more.
+        </p>
+      </Panel>
+    );
 
   return (
     <div className="flex flex-col gap-6">
@@ -443,7 +470,8 @@ export function AdminPanel({ admin, program: p, upgradeAuthority, now }: Props) 
           <>
             <p className="text-sm text-mute">
               To upgrade, the new code is first written to a buffer whose authority is this wallet. Freezing
-              is final: after it nobody can change the code, including you.
+              is final: after it nobody can change the code, including you, and the program can&apos;t be
+              closed to return its SOL deposit.
             </p>
             <Field label="Buffer address">
               {(id) => (
@@ -483,11 +511,34 @@ export function AdminPanel({ admin, program: p, upgradeAuthority, now }: Props) 
         )}
       </Panel>
 
+      {p.shutDown && upgradeAuthority === admin && (
+        <Panel title="Close the program">
+          <p className="text-sm text-mute">
+            Deletes the program for good and returns its SOL deposit, {formatSol(code.rentLamports)}, to this
+            wallet. Only possible when nobody&apos;s money is left with the program.
+          </p>
+          {blockers.length ? (
+            blockers.map((b) => <Notice key={b}>{b}</Notice>)
+          ) : (
+            <Action
+              {...act}
+              id="close"
+              label="Close the program and return its SOL"
+              confirm="CLOSE"
+              build={async () => [
+                await getCloseProgramInstruction({ authority: signer, recipient: address(admin) }),
+              ]}
+            />
+          )}
+        </Panel>
+      )}
+
       {!p.shutDown && (
         <Panel title="Shut down">
           <p className="text-sm text-mute">
             Irreversible. Buying, deposits and new API requests stop for good. Withdrawals keep working, and
-            every holder can redeem credits for USDC 1:1.
+            every holder can redeem credits for USDC 1:1. Once everything is redeemed, the program can be
+            closed to return its SOL deposit.
           </p>
           <Action
             {...act}

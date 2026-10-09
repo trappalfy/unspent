@@ -2,7 +2,9 @@
 // every admin action on this page). The test wallet holds keys/localnet-admin-keypair.json, the admin that
 // ops/surfpool-up.sh and ops/rehearse.sh launch with. Covers: hidden for other wallets, pause and resume, a limit
 // raise that waits admin_delay and is applied after it, an immediate lowering, a backup gateway key proposed and
-// cancelled, freezing upgrades, axe and 390 px; with E2E_SHUTDOWN=1 also the irreversible shutdown.
+// cancelled, freezing upgrades, axe and 390 px; with E2E_SHUTDOWN=1 also the irreversible shutdown. E2E_CLOSE=1
+// (with E2E_SHUTDOWN=1) skips the freeze and ends by closing the program for its SOL deposit — refused while credits
+// are in circulation (after tests/e2e/ui.ts), done when none are (owner, 2026-10-10: a test that must give its SOL back).
 //
 // Prereqs: ops/surfpool-up.sh (or ops/rehearse.sh), `pnpm --filter @unspent/db devdb`, Chrome.
 //   pnpm --filter @unspent/e2e admin
@@ -13,7 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createSolanaRpc, generateKeyPairSigner, getAddressFromPublicKey } from "@solana/kit";
 import { chromium, type Page } from "playwright-core";
-import { readProgram, readUpgradeAuthority } from "../../apps/web/lib/chain/read";
+import { readProgram, readProgramCode, readReserveBalances } from "../../apps/web/lib/chain/read";
 import { axe, describe } from "./axe";
 import { cheat, installWallet, until, walletFromKeypairFile } from "./wallet";
 
@@ -46,7 +48,9 @@ async function main() {
   const admin = await walletFromKeypairFile(`${ROOT}keys/localnet-admin-keypair.json`);
   if (start.admin !== admin.address)
     throw new Error(`admin on the fork is ${start.admin}, not the local admin key`);
-  if (start.shutDown) throw new Error("the fork is already shut down: run ops/surfpool-up.sh");
+  // Already shut down (tests/e2e/ui.ts with E2E_SHUTDOWN=1 redeemed everything): only the closing is left to test.
+  const closing = process.env.E2E_CLOSE === "1";
+  if (start.shutDown && !closing) throw new Error("the fork is already shut down: run ops/surfpool-up.sh");
 
   const web = spawn("pnpm", ["exec", "next", "dev", "-p", String(WEB_PORT)], {
     cwd: `${ROOT}apps/web`,
@@ -132,77 +136,122 @@ async function main() {
     await until(`${label} onchain`, check, 90_000);
   }
 
-  // 3. Pause and resume buying
-  await act("Pause buying", async () => (await state()).buyPaused);
-  ok("pause buying → buy_paused onchain", true);
-  await act("Resume buying", async () => !(await state()).buyPaused);
-  ok("resume buying → buy_paused false", true);
+  if (!start.shutDown) {
+    // 3. Pause and resume buying
+    await act("Pause buying", async () => (await state()).buyPaused);
+    ok("pause buying → buy_paused onchain", true);
+    await act("Resume buying", async () => !(await state()).buyPaused);
+    ok("resume buying → buy_paused false", true);
 
-  // 4. A raise waits admin_delay; after it the page offers Apply; lowering applies at once.
-  const limitForm = (value: string) => async (p: Page) => {
-    await p.getByLabel("Limit", { exact: true }).selectOption({ label: "Max hold per request" });
-    await p.getByLabel("New value, credits").fill(value);
-  };
-  const raised = start.maxReservation + 10n * C;
-  await act(
-    "Set limit",
-    async () => (await state()).pending.some((r) => r.value === raised),
-    undefined,
-    limitForm(String(raised / C)),
-  );
-  ok("raise max hold → pending, limit unchanged", (await state()).maxReservation === start.maxReservation);
-  await page.goto(`${WEB}/app/admin`);
-  ok("pending change listed", (await page.getByText("Takes effect").count()) === 1);
-  const effectiveAt = (await state()).pending[0]!.effectiveAt;
-  await cheat("surfnet_timeTravel", [{ absoluteTimestamp: (Number(effectiveAt) + 60) * 1000 }]);
-  await until("page sees the change as ready", async () => {
+    // 4. A raise waits admin_delay; after it the page offers Apply; lowering applies at once.
+    const limitForm = (value: string) => async (p: Page) => {
+      await p.getByLabel("Limit", { exact: true }).selectOption({ label: "Max hold per request" });
+      await p.getByLabel("New value, credits").fill(value);
+    };
+    const raised = start.maxReservation + 10n * C;
+    await act(
+      "Set limit",
+      async () => (await state()).pending.some((r) => r.value === raised),
+      undefined,
+      limitForm(String(raised / C)),
+    );
+    ok("raise max hold → pending, limit unchanged", (await state()).maxReservation === start.maxReservation);
     await page.goto(`${WEB}/app/admin`);
-    return (await page.getByText("ready to apply").count()) > 0;
-  });
-  await act("Apply: Max hold per request", async () => (await state()).maxReservation === raised);
-  ok("after admin_delay: Apply → limit raised, nothing pending", (await state()).pending.length === 0);
-  await act(
-    "Set limit",
-    async () => (await state()).maxReservation === start.maxReservation,
-    undefined,
-    limitForm(String(start.maxReservation / C)),
-  );
-  ok("lowering applies at once", (await state()).pending.length === 0);
+    ok("pending change listed", (await page.getByText("Takes effect").count()) === 1);
+    const effectiveAt = (await state()).pending[0]!.effectiveAt;
+    await cheat("surfnet_timeTravel", [{ absoluteTimestamp: (Number(effectiveAt) + 60) * 1000 }]);
+    await until("page sees the change as ready", async () => {
+      await page.goto(`${WEB}/app/admin`);
+      return (await page.getByText("ready to apply").count()) > 0;
+    });
+    await act("Apply: Max hold per request", async () => (await state()).maxReservation === raised);
+    ok("after admin_delay: Apply → limit raised, nothing pending", (await state()).pending.length === 0);
+    await act(
+      "Set limit",
+      async () => (await state()).maxReservation === start.maxReservation,
+      undefined,
+      limitForm(String(start.maxReservation / C)),
+    );
+    ok("lowering applies at once", (await state()).pending.length === 0);
 
-  // 5. Backup gateway key: proposed (waits), then cancelled
-  const backup = (await generateKeyPairSigner()).address;
-  await act(
-    "Propose backup key",
-    async () => (await state()).pending.some((r) => r.key === backup),
-    undefined,
-    async (p) => p.getByLabel("Backup gateway key").fill(backup),
-  );
-  ok("backup key proposed → pending", true);
-  await act("Cancel: Backup gateway key", async () => (await state()).pending.length === 0);
-  ok("backup key cancelled", true);
+    // 5. Backup gateway key: proposed (waits), then cancelled
+    const backup = (await generateKeyPairSigner()).address;
+    await act(
+      "Propose backup key",
+      async () => (await state()).pending.some((r) => r.key === backup),
+      undefined,
+      async (p) => p.getByLabel("Backup gateway key").fill(backup),
+    );
+    ok("backup key proposed → pending", true);
+    await act("Cancel: Backup gateway key", async () => (await state()).pending.length === 0);
+    ok("backup key cancelled", true);
 
-  // 6. Layout and accessibility of the page
-  for (const width of [390, 1280]) {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto(`${WEB}/app/admin`);
-    await page.waitForLoadState("networkidle");
-    const sw = await page.evaluate(() => document.documentElement.scrollWidth);
-    ok(`${width}px /app/admin: no horizontal scroll (${sw})`, sw <= width);
-    const v = await axe(page);
-    if (v.length) console.log(`    ${describe(v)}`);
-    ok(`${width}px /app/admin: axe WCAG 2.1 AA`, v.length === 0);
+    // 6. Layout and accessibility of the page
+    for (const width of [390, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`${WEB}/app/admin`);
+      await page.waitForLoadState("networkidle");
+      const sw = await page.evaluate(() => document.documentElement.scrollWidth);
+      ok(`${width}px /app/admin: no horizontal scroll (${sw})`, sw <= width);
+      const v = await axe(page);
+      if (v.length) console.log(`    ${describe(v)}`);
+      ok(`${width}px /app/admin: axe WCAG 2.1 AA`, v.length === 0);
+    }
+    await page.screenshot({ path: join(SHOTS, "02-admin.png"), fullPage: true });
+
+    // 7. Freeze upgrades (typed confirmation); not when the run ends by closing the program
+    if (!closing) {
+      await act(
+        "Freeze upgrades forever",
+        async () => (await readProgramCode(rpc)).authority === null,
+        "FREEZE",
+      );
+      await page.goto(`${WEB}/app/admin`);
+      ok(
+        "upgrades frozen onchain and on the page",
+        (await page.getByText("Upgrades are frozen.").count()) === 1,
+      );
+    }
+
+    // 8. Irreversible, opt-in: shutdown
+    if (process.env.E2E_SHUTDOWN === "1") {
+      await act("Shut down Unspent", async () => (await state()).shutDown, "SHUT DOWN");
+      ok("shutdown → shut_down onchain", true);
+    }
   }
-  await page.screenshot({ path: join(SHOTS, "02-admin.png"), fullPage: true });
 
-  // 7. Freeze upgrades (typed confirmation)
-  await act("Freeze upgrades forever", async () => (await readUpgradeAuthority(rpc)) === null, "FREEZE");
-  await page.goto(`${WEB}/app/admin`);
-  ok("upgrades frozen onchain and on the page", (await page.getByText("Upgrades are frozen.").count()) === 1);
-
-  // 8. Irreversible, opt-in: shutdown
-  if (process.env.E2E_SHUTDOWN === "1") {
-    await act("Shut down Unspent", async () => (await state()).shutDown, "SHUT DOWN");
-    ok("shutdown → shut_down onchain", true);
+  // 9. Close the program and take its rent back, only when nobody's money is left with it
+  if (closing) {
+    const p = await state();
+    await page.goto(`${WEB}/app/admin`);
+    await page.getByRole("heading", { name: "Close the program" }).waitFor();
+    if (p.supply > 0n) {
+      ok(
+        "close refused while credits are in circulation",
+        (await page.getByText("are still in circulation").count()) === 1 &&
+          (await page.getByRole("button", { name: "Close the program and return its SOL" }).count()) === 0,
+      );
+    } else {
+      if ((await readReserveBalances(rpc, p)).reserveUsdc > 0n)
+        await act(
+          "Sweep surplus to the treasury",
+          async () => (await readReserveBalances(rpc, p)).reserveUsdc === 0n,
+        );
+      const rent = (await readProgramCode(rpc)).rentLamports;
+      const before = (await rpc.getBalance(admin.address as never).send()).value;
+      await act(
+        "Close the program and return its SOL",
+        async () => (await readProgramCode(rpc)).closed,
+        "CLOSE",
+      );
+      const gained = (await rpc.getBalance(admin.address as never).send()).value - before;
+      ok(
+        `program closed → ${Number(gained) / 1e9} SOL back to the admin wallet (rent ${Number(rent) / 1e9})`,
+        gained > rent - 1_000_000n,
+      );
+      await page.goto(`${WEB}/app/admin`);
+      ok("page shows the program closed", (await page.getByText("Program closed").count()) === 1);
+    }
   }
 
   // Navigating away mid-stream makes next dev log "destination stream errored"; that is not a page error.

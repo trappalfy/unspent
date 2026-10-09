@@ -130,12 +130,23 @@ export async function readProgram(rpc: AppRpc): Promise<ProgramState | null> {
   };
 }
 
-/** The program's upgrade authority; null once upgrades are frozen (Q12). */
-export async function readUpgradeAuthority(rpc: AppRpc): Promise<Address | null> {
+export type ProgramCode = {
+  /** The code was deleted with the loader's Close; the program can't run any more. */
+  closed: boolean;
+  /** null once upgrades are frozen (Q12) or the program is closed. */
+  authority: Address | null;
+  /** Rent held by the program's code account; Close returns it. */
+  rentLamports: bigint;
+};
+
+/** The program's code account: who can upgrade or close it, and the rent it holds. */
+export async function readProgramCode(rpc: AppRpc): Promise<ProgramCode> {
   const { value } = await rpc
     .getAccountInfo(await findProgramDataAddress(), { encoding: "base64", commitment: "confirmed" })
     .send();
-  return value ? decodeUpgradeAuthority(getBase64Encoder().encode(value.data[0]) as Uint8Array) : null;
+  if (!value) return { closed: true, authority: null, rentLamports: 0n };
+  const data = getBase64Encoder().encode(value.data[0]) as Uint8Array;
+  return { closed: false, authority: decodeUpgradeAuthority(data), rentLamports: value.lamports };
 }
 
 export async function readUser(rpc: AppRpc, owner: string): Promise<UserState> {
