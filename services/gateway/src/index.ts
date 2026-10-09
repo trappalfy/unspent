@@ -3,6 +3,7 @@ import { openPostgres } from "@unspent/db";
 import { createApp } from "./app";
 import { SolanaChain } from "./chain";
 import { loadConfig } from "./config";
+import { loadGeo } from "./geo";
 import { createLogger } from "./log";
 import { MemoryRateLimiter } from "./ratelimit";
 import { Reconciler } from "./reconcile";
@@ -18,7 +19,9 @@ const chain = await SolanaChain.create(
   config.maxPriorityFeeMicroLamports,
 );
 const upstream = new AnthropicUpstream(config.anthropicBaseUrl, config.anthropicKeys, log);
-const deps = { config, db, chain, upstream, limiter: new MemoryRateLimiter(), log };
+const geo = loadGeo(config.geoipDbPath);
+if (!geo) log.warn("regional check off: GEOIP_DB_PATH is not set");
+const deps = { config, db, chain, upstream, limiter: new MemoryRateLimiter(), log, geo };
 
 const settle = new SettleWorker(db, chain, log, config.settleFlushMs);
 settle.start();

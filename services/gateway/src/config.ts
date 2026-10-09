@@ -22,6 +22,8 @@ export type GatewayConfig = {
   progressIntervalMs: number;
   maxPriorityFeeMicroLamports: bigint;
   alertWebhookUrl: string | null;
+  /** DB-IP country database for the regional check (Q13); empty = check off (local development). */
+  geoipDbPath: string;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): GatewayConfig {
@@ -34,7 +36,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): GatewayConfig 
     throw new Error("PROVIDER_MODE=mock must not point at the real Anthropic API (brief rule 0.3)");
   }
   return {
-    port: Number(env.GATEWAY_PORT ?? 8787),
+    port: Number(env.GATEWAY_PORT ?? env.PORT ?? 8787),
     network: parseNetwork(env.NEXT_PUBLIC_SOLANA_NETWORK ?? "mainnet"),
     markupBps: Number(env.MARKUP_BPS ?? MARKUP_BPS),
     providerMode,
@@ -56,5 +58,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): GatewayConfig 
     progressIntervalMs: Number(env.PROGRESS_INTERVAL_MS ?? 30_000),
     maxPriorityFeeMicroLamports: BigInt(env.MAX_PRIORITY_FEE_MICROLAMPORTS ?? 200_000),
     alertWebhookUrl: env.ALERT_WEBHOOK_URL || null,
+    geoipDbPath: env.GEOIP_DB_PATH ?? "",
   };
 }

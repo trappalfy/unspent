@@ -12,6 +12,7 @@ import {
   UpgradeAuthority,
   WebSearchPrice,
 } from "@/components/docs/Live";
+import { ContactEmail, GoverningLaw, LegalEntity, SiteUrl } from "@/components/LegalValues";
 import { PricingTable } from "@/components/landing/PricingTable";
 import { TableWrap } from "@/components/TableWrap";
 import { apiBase } from "@/lib/env";
@@ -81,6 +82,10 @@ const components: MDXComponents = {
   ),
   Addresses,
   ApiBase,
+  ContactEmail,
+  GoverningLaw,
+  LegalEntity,
+  SiteUrl,
   CostExample,
   HoldExample,
   Limit,

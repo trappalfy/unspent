@@ -1,0 +1,82 @@
+These Terms govern your use of Unspent: the website at <SiteUrl />, the web app, the API and the credits described below. Unspent is operated by <LegalEntity /> ("Unspent", "we", "us"). By using Unspent you agree to these Terms. If you don't agree, don't use Unspent.
+
+## 1. What Unspent is
+
+Unspent sells prepaid credits for AI model inference as a token on Solana. One credit pays for $1 of inference at Unspent's prices through the Unspent API. You buy credits with your own wallet, and the Unspent program on Solana records purchases, API balances and the cost of every request.
+
+Unspent is not affiliated with Anthropic. Claude is a trademark of Anthropic, PBC.
+
+## 2. Who can use Unspent
+
+- You must be at least 18 years old and able to enter into a binding contract.
+- Unspent is available only in the countries and regions where its model provider's services are available. Don't use Unspent from anywhere else, and don't work around this restriction.
+- You may not use Unspent if you are the subject of sanctions or located in a sanctioned country or territory, or on behalf of anyone who is.
+
+## 3. Credits
+
+- **What a credit is.** A credit is a token on Solana with 6 decimals. It is a prepaid means of paying for inference through the Unspent API: one credit pays for $1 of inference at the prices shown on the site and at `/v1/models`.
+- **Purchases are final.** Credits are sold for inference. While Unspent operates, we don't buy credits back and don't refund purchases.
+- **Transfers.** You may send credits to anyone or sell them to others, for example on a decentralized exchange. Unspent is not a party to those transactions and makes no promise about the price of credits on any market.
+- **No expiry.** Credits don't expire.
+- **Prices.** Inference prices follow the model provider's list prices plus our margin, and they may change. A request is priced at the prices in effect when it starts.
+- **Reserve.** The USDC paid for credits is held in the program's reserve and leaves it when credits are burned to pay for inference, when they are redeemed after a shutdown, or when USDC above the credits in circulation is moved to the treasury. How this works is described in the [Docs](/docs/onchain).
+- **Taxes.** You are responsible for any taxes that apply to your purchases and use of credits.
+
+## 4. Your wallet and API keys
+
+- You control your wallet. We never hold your private keys, can't reverse transactions on Solana and can't recover a lost wallet.
+- API keys are shown once. Keep them secret: requests made with your key are paid from your API balance. Revoke any key you think is exposed.
+- You can withdraw the available part of your API balance to your wallet at any time. It doesn't need our approval.
+
+## 5. Acceptable use
+
+You must follow [Anthropic's Usage Policy](https://www.anthropic.com/legal/aup) and any other rules of the model provider that apply to the models you use, as well as the laws that apply to you. You must not:
+
+- use Unspent for anything those policies or laws prohibit;
+- try to get around rate limits, holds, the regional restriction or other limits of the service;
+- disrupt the service, or test it for vulnerabilities without our written permission.
+
+If we reasonably believe you broke these rules, we may suspend or revoke your API keys or block your wallet from the API. This doesn't touch your credits onchain: you can still withdraw your API balance and send or sell your credits.
+
+## 6. The program and the blockchain
+
+- The Unspent program runs on Solana and works as described in the [Docs](/docs/onchain). It has not had an independent security review. Software can contain bugs, and transactions on Solana are final.
+- Until program upgrades are frozen, whoever holds the program's upgrade authority can change its code.
+- USDC is issued by Circle, a third party that can freeze USDC accounts, including the program's reserve.
+- Solana network outages and congestion, and failures of RPC providers, wallets or swap services, can delay or prevent transactions.
+- Every purchase, hold and settlement is public on Solana. See the [Privacy Policy](/privacy).
+
+## 7. The API and model output
+
+- We forward your requests to the model provider and return its responses. We don't store prompts or responses.
+- Model output can be inaccurate, incomplete or inappropriate. You are responsible for how you use it.
+- If you interrupt a request, you pay for everything the model generated, up to `max_tokens`.
+- We may change the available models, prices, limits and features, and we may add or remove models.
+
+## 8. Shutdown
+
+We may stop operating Unspent at any time. If we shut Unspent down, we will call the program's shutdown instruction: purchases and new requests stop, withdrawals keep working, and any holder can redeem credits for USDC from the reserve, 1 credit for 1 USDC.
+
+## 9. Disclaimers
+
+Unspent is provided "as is" and "as available". To the maximum extent permitted by law, we disclaim all warranties, express or implied, including merchantability, fitness for a particular purpose and non-infringement. We don't warrant that Unspent will be uninterrupted, error-free or secure, or that model output will be accurate.
+
+## 10. Limitation of liability
+
+To the maximum extent permitted by law, we are not liable for indirect, incidental, special, consequential or punitive damages, lost profits, lost data, or losses caused by blockchains, wallets, model providers or other third parties. Our total liability for any claim relating to Unspent is limited to the greater of the amount you paid for inference through Unspent in the 12 months before the claim and 100 US dollars.
+
+## 11. Indemnity
+
+You will indemnify us against claims, losses and costs arising from your use of Unspent in breach of these Terms or the law.
+
+## 12. Changes to these Terms
+
+We may update these Terms. We will post the new version here with its date. If you keep using Unspent after an update, you accept the updated Terms.
+
+## 13. Governing law
+
+These Terms are governed by the laws of <GoverningLaw />, and disputes are resolved by its courts, unless the law where you live requires otherwise.
+
+## 14. Contact
+
+<ContactEmail />

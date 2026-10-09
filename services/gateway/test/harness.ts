@@ -7,6 +7,7 @@ import { generateApiKey, sha256 } from "@unspent/shared";
 import { createApp } from "../src/app";
 import { loadConfig } from "../src/config";
 import type { Db } from "../src/db";
+import type { CountryLookup } from "../src/geo";
 import { createLogger } from "../src/log";
 import type { Deps } from "../src/pipeline";
 import { MemoryRateLimiter } from "../src/ratelimit";
@@ -44,7 +45,12 @@ let walletN = 0;
 export const newWallet = () => `Wallet${String(++walletN).padStart(4, "0")}${"1".repeat(32)}`.slice(0, 44);
 
 export async function startHarness(
-  opts: { credits?: bigint; env?: Record<string, string>; limiter?: MemoryRateLimiter } = {},
+  opts: {
+    credits?: bigint;
+    env?: Record<string, string>;
+    limiter?: MemoryRateLimiter;
+    geo?: CountryLookup;
+  } = {},
 ): Promise<Harness> {
   const mock = await startMockAnthropic();
   const { db, close: closeDb } = await openTestDb();
@@ -62,7 +68,15 @@ export async function startHarness(
     ...opts.env,
   });
   const upstream = new AnthropicUpstream(config.anthropicBaseUrl, config.anthropicKeys, log);
-  const deps: Deps = { config, db, chain, upstream, limiter: opts.limiter ?? new MemoryRateLimiter(), log };
+  const deps: Deps = {
+    config,
+    db,
+    chain,
+    upstream,
+    limiter: opts.limiter ?? new MemoryRateLimiter(),
+    log,
+    geo: opts.geo ?? null,
+  };
   const settle = new SettleWorker(db, chain, log, config.settleFlushMs);
   const reconciler = new Reconciler(db, chain, log, {
     intervalMs: 60_000,

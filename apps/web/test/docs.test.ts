@@ -43,5 +43,6 @@ describe("docs", () => {
       /\b(audited|guaranteed?|yield|apy|investment|official|partner(ship)?|trustless|staking|cashback)\b/i;
     for (const d of DOCS) expect(doc(d.slug), d.slug).not.toMatch(banned);
     expect(read("app/page.tsx")).not.toMatch(banned);
+    for (const f of ["terms", "privacy"]) expect(read(`content/legal/${f}.mdx`), f).not.toMatch(banned);
   });
 });

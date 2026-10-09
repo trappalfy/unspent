@@ -3,4 +3,5 @@ export * from "./apiKey";
 export * from "./constants";
 export * from "./models";
 export * from "./pricing";
+export * from "./regions";
 export * from "./units";

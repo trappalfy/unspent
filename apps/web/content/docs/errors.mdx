@@ -24,6 +24,7 @@ None of them is charged. Messages say what happened and what to do.
 | 400 | `invalid_request_error` | `request_too_expensive` | The worst-case cost is over the per-request limit. Lower `max_tokens` |
 | 401 | `authentication_error` | `invalid_api_key` | The key is missing, unknown or revoked |
 | 402 | `billing_error` | `insufficient_credits` | The hold doesn't fit your available balance. Lower `max_tokens` or top up |
+| 403 | `permission_error` | `region_not_supported` | Unspent is not available in your country or region |
 | 409 | `invalid_request_error` | `request_in_progress` | A request with this `Idempotency-Key` is still running |
 | 409 | `invalid_request_error` | `already_processed` | A request with this `Idempotency-Key` already ran. The body has its `request_id` and `credits_charged` |
 | 409 | `invalid_request_error` | `idempotency_key_reused` | This `Idempotency-Key` was used with a different body |

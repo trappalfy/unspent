@@ -23,6 +23,7 @@ import type { Db } from "./db";
 import { type GatewayError, gwErr } from "./errors";
 import { estimateBody, toReservationInput } from "./estimate";
 import { filterMessagesBody } from "./filter";
+import type { CountryLookup } from "./geo";
 import { claimIdempotency, linkIdempotency, releaseIdempotency } from "./idempotency";
 import type { Logger } from "./log";
 import type { RateLimiter } from "./ratelimit";
@@ -37,6 +38,8 @@ export type Deps = {
   limiter: RateLimiter;
   log: Logger;
   catalog?: ModelEntry[];
+  /** Country by client IP for the regional check; absent = no check. */
+  geo?: CountryLookup | null;
 };
 
 export type Endpoint = "messages" | "chat_completions";

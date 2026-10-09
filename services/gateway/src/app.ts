@@ -1,8 +1,9 @@
-import { ucrToCredits } from "@unspent/shared";
+import { regionAllowed, ucrToCredits } from "@unspent/shared";
 import { Hono } from "hono";
 import { authenticate } from "./auth";
 import { chatCompletions } from "./chat";
-import { type GatewayError, gwErr, renderAnthropic } from "./errors";
+import { type GatewayError, gwErr, renderAnthropic, renderOpenAI } from "./errors";
+import { clientIp } from "./geo";
 import { modelsResponse } from "./models";
 import { type Deps, dispatch, prepare } from "./pipeline";
 
@@ -48,6 +49,19 @@ export function createApp(deps: Deps) {
   });
 
   app.get("/health", (c) => c.json({ ok: true }));
+
+  // Q13: only countries where Anthropic's services are available. An unknown country is let through.
+  app.use("/v1/*", async (c, next) => {
+    const ip = deps.geo ? clientIp(c.req.raw.headers) : null;
+    if (!ip || regionAllowed(deps.geo?.(ip))) return next();
+    const e = gwErr(
+      403,
+      "permission_error",
+      "region_not_supported",
+      "Unspent is not available in your country or region.",
+    );
+    return c.req.path.startsWith("/v1/chat/") ? renderOpenAI(e) : renderAnthropic(e);
+  });
   // Claude Code connection warm-up; Hono serves HEAD through the GET route.
   app.get("/api/hello", (c) => c.body(null, 200));
   app.get("/v1/models", (c) => c.json(modelsResponse(deps.config.markupBps, deps.catalog)));

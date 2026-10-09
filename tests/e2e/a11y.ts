@@ -35,6 +35,7 @@ const PAGES = [
   "/reserve",
   "/privacy",
   "/terms",
+  "/unavailable",
   "/no-such-page",
 ];
 

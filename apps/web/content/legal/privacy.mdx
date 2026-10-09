@@ -1,0 +1,50 @@
+This policy explains what data Unspent processes and why. Unspent is operated by <LegalEntity />, which is responsible for this data. Contact: <ContactEmail />.
+
+## What we process
+
+| Data | Why | How long |
+|---|---|---|
+| Wallet address | Sign-in, linking API keys and usage to you | While we provide the service, and as long as billing records must be kept |
+| API keys | Authenticating requests. We keep only a SHA-256 hash and the last 4 characters | Until you revoke the key; revoked keys stay in your history |
+| Request metadata: time, key, model, token counts, cost, duration, status, request ids, transaction signatures, the provider's request id, Claude Code session and agent ids | Billing, your usage page, support, preventing abuse | As long as billing and accounting records must be kept |
+| SHA-256 hashes of an `Idempotency-Key` and the request body | Making retries safe | 24 hours |
+| IP address | Rate limits and the regional restriction | Not stored by us |
+| Session cookie | Keeping you signed in | 7 days |
+| Sign-in cookie | Checking your wallet's sign-in signature | 10 minutes |
+| Browser storage | Remembering which wallet you used | Until you clear it |
+
+Our hosting providers may keep IP addresses in their request logs for a short time.
+
+## What we don't collect
+
+We don't store or log the content of your requests and responses: prompts, system prompts, messages, tool calls, files and images pass through to the model and are not kept. There are no analytics or advertising trackers on the site.
+
+## Public data on Solana
+
+Purchases, deposits, withdrawals, holds and settlements are Solana transactions. Anyone can see their wallet addresses, amounts and times, and nobody can delete them, including us. Models, token counts and request content are not onchain.
+
+## Who processes data for us
+
+- **Anthropic** processes the content of your requests to generate responses, under its own terms and policies.
+- **Vercel** (website), **Fly.io** (API) and **Neon** (database) host the service.
+- **Helius** provides access to Solana. Your wallet address and transactions pass through it when the site reads the chain or sends a transaction.
+- **Jupiter** receives your wallet address and amounts when you buy credits with another token or sell credits, to build the swap.
+- The regional restriction uses the [IP Geolocation by DB-IP](https://db-ip.com) database on our own servers. No data is sent to DB-IP.
+
+Your wallet app has its own privacy policy.
+
+## Your rights
+
+Depending on where you live, for example in the EU or the UK, you may have the right to access, correct or delete your data, to restrict or object to its processing, to receive it in a portable format, and to complain to a data protection authority. To use these rights, write to <ContactEmail />. We can't delete data that is public on Solana, and we may keep billing records for as long as the law requires.
+
+## Transfers
+
+Our providers may process data in the United States and other countries, with the safeguards the law requires.
+
+## Children
+
+Unspent is not for anyone under 18.
+
+## Changes
+
+We will post updates to this policy here with their date.

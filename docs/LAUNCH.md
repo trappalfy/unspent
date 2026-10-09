@@ -16,8 +16,7 @@
 | Три кошелька участников мультисигов, лучше аппаратные | голоса 2 из 3 в Squads | `MEMBERS` |
 | Аккаунты Fly.io, Vercel, Neon | хостинг (Q11) | — |
 | Webhook для алертов (Slack, Telegram-бот и т. п.) | алерты шлюза | `ALERT_WEBHOOK_URL` |
-| Тексты Terms и Privacy (раздел 14 брифа) | страницы `/terms`, `/privacy` | — |
-| Список стран для геоблока (Q13) | блок, где сервисы провайдера недоступны | ещё не сделан, см. раздел 9 |
+| Юрлицо, контактный email, применимое право | черновики Terms и Privacy уже на сайте, эти три значения подставляются | `LEGAL_ENTITY`, `CONTACT_EMAIL`, `GOVERNING_LAW` на Vercel |
 
 ## 2. Ключи
 
@@ -59,7 +58,7 @@
      ANTHROPIC_API_KEYS=… ALERT_WEBHOOK_URL=… NEXT_PUBLIC_SITE_URL=https://<домен>
    fly certs add <хост API> -a unspent-gateway   # затем CNAME у регистратора
    ```
-   Шлюз — ровно одна машина: лимиты частоты и очередь расчётов живут в процессе.
+   Шлюз — ровно одна машина: лимиты частоты и очередь расчётов живут в процессе. Образ при сборке скачивает базу «IP → страна» DB-IP для геоблока; раз в месяц образ стоит пересобирать (`fly deploy`), чтобы база была свежей.
 4. **Vercel:** проект с Root Directory `apps/web`, переменная `ENABLE_EXPERIMENTAL_COREPACK=1` (pnpm 12 из `packageManager`). Переменные окружения:
 
    | Переменная | Значение |
@@ -73,6 +72,7 @@
    | `RPC_URL` | Helius |
    | `JUPITER_API_KEY` | ключ Jupiter |
    | `TOKEN_SYMBOL` | символ кредита (тот же, что в `launch.ts`) |
+   | `LEGAL_ENTITY`, `CONTACT_EMAIL`, `GOVERNING_LAW` | для Terms и Privacy; без них продакшен-сборка открытого сайта не пройдёт |
 
    Сайт можно выложить сразу в режиме `PRELAUNCH=true`: Docs открыты, `/app` закрыт.
 
@@ -188,8 +188,14 @@ squads propose admin shutdown                    # необратимо: пок�
 - баланс SOL ключа шлюза;
 - страница `/reserve`: покрытие не ниже 100%.
 
-## 9. Открытые вопросы перед открытием
+## 9. Перед открытием
 
-- **Геоблок (Q13)** ещё не сделан. Для сайта — проверка страны в Next (`proxy.ts`, заголовок `x-vercel-ip-country`). Для API — Cloudflare перед хостом API или база GeoIP в шлюзе. Нужен список стран.
-- **Тексты Terms и Privacy** от владельца.
+- **Геоблок (Q13) сделан** по [списку стран Anthropic](https://www.anthropic.com/supported-countries) (`packages/shared/src/regions.ts`, 185 стран):
+  - сайт закрывает `/app` и свои API по заголовку страны от Vercel;
+  - шлюз отвечает `403 region_not_supported` по IP (база DB-IP);
+  - главная, Docs, Terms и Privacy открыты всем;
+  - Украина разрешена целиком: база по странам не различает регионы, исключённые Anthropic.
+
+  Список стоит сверять со страницей Anthropic перед запуском.
+- **Terms и Privacy** — черновики на сайте. Их нужно прочитать, лучше показать юристу, и задать `LEGAL_ENTITY`, `CONTACT_EMAIL`, `GOVERNING_LAW`.
 - **Символ токена (Q1) и домен (Q10).**

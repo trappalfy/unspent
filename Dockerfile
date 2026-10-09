@@ -5,5 +5,7 @@ RUN npm install -g pnpm@12.5.1
 WORKDIR /app
 COPY . .
 RUN pnpm install --frozen-lockfile --filter "@unspent/gateway..." --filter "@unspent/indexer..."
-ENV NODE_ENV=production
+# IP-to-country database for the gateway's regional check (Q13); rebuild the image monthly to refresh it.
+RUN node services/gateway/scripts/fetch-geoip.mjs /app/geo/country.mmdb
+ENV NODE_ENV=production GEOIP_DB_PATH=/app/geo/country.mmdb
 CMD ["pnpm", "--filter", "@unspent/gateway", "start"]

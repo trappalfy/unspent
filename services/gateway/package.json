@@ -15,7 +15,8 @@
     "@unspent/db": "workspace:*",
     "@unspent/program": "workspace:*",
     "@unspent/shared": "workspace:*",
-    "hono": "^4.13.13"
+    "hono": "^4.13.13",
+    "mmdb-lib": "^3.0.3"
   },
   "devDependencies": {
     "@solana-program/token": "^0.17.0",
