@@ -28,10 +28,12 @@ export function createLogger(
       const l = line("alert", kind, f);
       sink(l);
       if (opts.webhookUrl) {
+        // Slack and Telegram (sendMessage?chat_id=…) read `text`, Discord reads `content` (2000 characters max).
+        const text = `Unspent alert: ${l}`.slice(0, 1900);
         fetch(opts.webhookUrl, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: l,
+          body: JSON.stringify({ text, content: text }),
         }).catch(() => {});
       }
     },

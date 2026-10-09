@@ -6,6 +6,8 @@
 
 ## 1. Что нужно от владельца
 
+Значения владелец вписывает в `.env.mainnet` в корне (в `.gitignore`, в образ и на Vercel не попадает), не в чат.
+
 | Что | Зачем | Где используется |
 |---|---|---|
 | Ключ Anthropic (один или несколько) | инференс | секрет `ANTHROPIC_API_KEYS` на Fly |
@@ -15,7 +17,7 @@
 | Символ токена кредита (Q1) | метаданные минта, `/token.json` | `TOKEN_SYMBOL` |
 | Три кошелька участников мультисигов, лучше аппаратные | голоса 2 из 3 в Squads | `MEMBERS` |
 | Аккаунты Fly.io, Vercel, Neon | хостинг (Q11) | — |
-| Webhook для алертов (Slack, Telegram-бот и т. п.) | алерты шлюза | `ALERT_WEBHOOK_URL` |
+| Webhook для алертов: Discord, Slack или Telegram (`https://api.telegram.org/bot<токен>/sendMessage?chat_id=<id>`) | алерты шлюза, приходят текстом | `ALERT_WEBHOOK_URL` |
 | Юрлицо, контактный email, применимое право | черновики Terms и Privacy уже на сайте, эти три значения подставляются | `LEGAL_ENTITY`, `CONTACT_EMAIL`, `GOVERNING_LAW` на Vercel |
 
 ## 2. Ключи
