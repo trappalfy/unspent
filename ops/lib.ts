@@ -24,10 +24,15 @@ import {
   signTransactionMessageWithSigners,
 } from "@solana/kit";
 
+export {
+  BPF_UPGRADEABLE_LOADER,
+  decodeUpgradeAuthority,
+  findProgramDataAddress as programDataAddress,
+} from "@unspent/program";
+
 export const ROOT = resolve(import.meta.dirname, "..");
 export const USDC_MINT = address("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 export const METADATA_PROGRAM = address("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
-export const BPF_UPGRADEABLE_LOADER = address("BPFLoaderUpgradeab1e11111111111111111111111");
 export const SYSVAR_RENT = address("SysvarRent111111111111111111111111111111111");
 export const SYSTEM_PROGRAM = address("11111111111111111111111111111111");
 
@@ -71,14 +76,6 @@ export async function loadOrCreateKeypair(path: string): Promise<KeyPairSigner> 
   mkdirSync(dirname(full), { recursive: true });
   writeFileSync(full, JSON.stringify(bytes), { mode: 0o600 });
   return signer;
-}
-
-export async function programDataAddress(program: Address): Promise<Address> {
-  const [pda] = await getProgramDerivedAddress({
-    programAddress: BPF_UPGRADEABLE_LOADER,
-    seeds: [getAddressEncoder().encode(program)],
-  });
-  return pda;
 }
 
 export async function metadataAddress(mint: Address): Promise<Address> {

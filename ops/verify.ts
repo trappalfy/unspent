@@ -1,11 +1,9 @@
-// Read-only check of a launched deployment (go/no-go before opening the site): program, Config, credit mint,
-// Metaplex metadata, reserve and vault, and both Squads multisigs, against ops/deployments/<network>*.json and the
-// launch defaults. Sends nothing, so it is safe on mainnet. Env: NETWORK, RPC_URL, EXPECT_FROZEN=1 after Q12.
+// Read-only check of a launched deployment (go/no-go before opening the site): program and its upgrade authority,
+// Config, credit mint, Metaplex metadata, reserve and vault, against ops/deployments/<network>.json and the launch
+// defaults. Sends nothing, so it is safe on mainnet. Env: NETWORK, RPC_URL, EXPECT_FROZEN=1 after Q12.
 
 import { type Address, address, createSolanaRpc, getAddressDecoder } from "@solana/kit";
-import { Connection, PublicKey } from "@solana/web3.js";
 import { fetchMint, fetchToken, findAssociatedTokenPda, TOKEN_PROGRAM_ADDRESS } from "@solana-program/token";
-import * as multisig from "@sqds/multisig";
 import {
   fetchConfig,
   findConfigPda,
@@ -14,17 +12,26 @@ import {
   UNSPENT_PROGRAM_ADDRESS,
 } from "@unspent/program";
 import { PROGRAM_DEFAULTS } from "@unspent/shared";
-import { env, METADATA_PROGRAM, metadataAddress, programDataAddress, readJson, USDC_MINT } from "./lib";
+import {
+  decodeUpgradeAuthority,
+  env,
+  METADATA_PROGRAM,
+  metadataAddress,
+  programDataAddress,
+  readJson,
+  USDC_MINT,
+} from "./lib";
 
 const network = env("NETWORK", "localnet");
 const rpcUrl = env("RPC_URL", "http://127.0.0.1:8899");
 const rpc = createSolanaRpc(rpcUrl);
-const conn = new Connection(rpcUrl, "confirmed");
-const deployment = readJson<{ creditMint: string; treasury: string; treasuryOwner: string; gateway: string }>(
-  `ops/deployments/${network}.json`,
-);
-type Ms = { multisig: string; vault: string; threshold: number; timeLock: number; members: string[] };
-const squads = readJson<{ admin: Ms; upgrade: Ms }>(`ops/deployments/${network}-squads.json`);
+const deployment = readJson<{
+  creditMint: string;
+  treasury: string;
+  treasuryOwner: string;
+  admin: string;
+  gateway: string;
+}>(`ops/deployments/${network}.json`);
 
 let failed = 0;
 function check(label: string, ok: boolean, detail = "") {
@@ -43,20 +50,15 @@ const addr = (bytes: Uint8Array) => getAddressDecoder().decode(bytes);
 const prog = await b64(UNSPENT_PROGRAM_ADDRESS);
 check("program is deployed and executable", !!prog?.executable, UNSPENT_PROGRAM_ADDRESS);
 const pd = await b64(await programDataAddress(UNSPENT_PROGRAM_ADDRESS));
-const authority = pd && pd.data[12] === 1 ? addr(pd.data.subarray(13, 45)) : null;
+const authority = pd ? decodeUpgradeAuthority(pd.data) : null;
 if (process.env.EXPECT_FROZEN === "1")
   check("upgrades are frozen (no upgrade authority)", pd !== null && authority === null);
-else
-  check(
-    "upgrade authority is the upgrade multisig's vault",
-    authority === squads.upgrade.vault,
-    authority ?? "none",
-  );
+else check("upgrade authority is the admin wallet", authority === deployment.admin, authority ?? "none");
 
 // Config
 const [configPda] = await findConfigPda();
 const c = (await fetchConfig(rpc, configPda)).data;
-check("admin is the admin multisig's vault", c.admin === squads.admin.vault, c.admin);
+check("admin is the admin wallet from the launch record", c.admin === deployment.admin, c.admin);
 check(
   "gateway is the launch gateway key",
   c.gateway.__option === "Some" && c.gateway.value === deployment.gateway,
@@ -70,11 +72,7 @@ check(
   "treasury is the USDC account of the treasury owner",
   c.treasury === treasuryAta && c.treasury === deployment.treasury,
 );
-check(
-  "treasury owner is the admin multisig's vault",
-  deployment.treasuryOwner === squads.admin.vault,
-  deployment.treasuryOwner,
-);
+check("treasury owner is the admin wallet", deployment.treasuryOwner === c.admin, deployment.treasuryOwner);
 check("USDC mint is mainnet USDC", c.usdcMint === USDC_MINT);
 check("credit mint matches the launch record", c.creditMint === deployment.creditMint);
 const limits: [string, bigint, bigint][] = [
@@ -118,10 +116,7 @@ else {
   };
   const [name, symbol, uri] = [str(), str(), str()];
   check("Metaplex metadata exists", meta.owner === METADATA_PROGRAM, `${name} / ${symbol} / ${uri}`);
-  check(
-    "metadata update authority is the admin multisig's vault",
-    addr(d.subarray(1, 33)) === squads.admin.vault,
-  );
+  check("metadata update authority is the admin wallet", addr(d.subarray(1, 33)) === c.admin);
 }
 
 // Reserve and vault
@@ -132,29 +127,6 @@ const vault = (await fetchToken(rpc, vaultPda)).data;
 check("reserve: USDC account owned by Config", reserve.mint === USDC_MINT && reserve.owner === configPda);
 check("vault: credit account owned by Config", vault.mint === c.creditMint && vault.owner === configPda);
 check("reserve ≥ supply", reserve.amount >= mint.supply, `${reserve.amount} ≥ ${mint.supply}`);
-
-// Squads
-for (const kind of ["admin", "upgrade"] as const) {
-  const e = squads[kind];
-  const ms = await multisig.accounts.Multisig.fromAccountAddress(conn, new PublicKey(e.multisig));
-  const [vaultKey] = multisig.getVaultPda({ multisigPda: new PublicKey(e.multisig), index: 0 });
-  const voters = ms.members.filter((m) =>
-    multisig.types.Permissions.has(m.permissions, multisig.types.Permission.Vote),
-  );
-  check(`${kind} multisig: vault matches`, vaultKey.toBase58() === e.vault);
-  check(
-    `${kind} multisig: ${ms.threshold} of ${voters.length} voters`,
-    ms.threshold >= 2 && voters.length >= 3,
-  );
-  check(`${kind} multisig: no config authority`, ms.configAuthority.equals(PublicKey.default));
-  if (kind === "admin") check("admin multisig: no time lock", ms.timeLock === 0, `${ms.timeLock} s`);
-  else
-    check(
-      "upgrade multisig: time lock ≥ admin_delay",
-      BigInt(ms.timeLock) >= c.adminDelay,
-      `${ms.timeLock} s`,
-    );
-}
 
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : "\nDEPLOYMENT VERIFIED");
 process.exit(failed ? 1 : 0);

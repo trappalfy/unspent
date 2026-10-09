@@ -3,7 +3,7 @@
 # launch.ts for localnet. Never touches a public cluster; Surfpool only reads mainnet accounts it doesn't have yet.
 #
 #   ops/surfpool-up.sh          # start + deploy + launch
-#   NO_LAUNCH=1 ops/surfpool-up.sh   # start + deploy only (ops/rehearse.sh launches with multisigs itself)
+#   NO_LAUNCH=1 ops/surfpool-up.sh   # start + deploy only (ops/rehearse.sh launches itself)
 #   ops/surfpool-up.sh stop
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -53,8 +53,14 @@ done
 solana airdrop 20 keys/localnet-deployer-keypair.json --url $U >/dev/null
 solana airdrop 5 keys/localnet-gateway-keypair.json --url $U >/dev/null
 solana airdrop 5 keys/localnet-admin-keypair.json --url $U >/dev/null
-solana program deploy "$V2" --skip-feature-verify --program-id keys/unspent-program-keypair.json -k keys/localnet-deployer-keypair.json \
-  --url $U 2>&1 | grep -E "Program Id|Error"
+# The fork fetches mainnet accounts while the deploy runs; a dropped remote fetch fails it, so retry a few times.
+for try in 1 2 3; do
+  OUT=$(solana program deploy "$V2" --skip-feature-verify --program-id keys/unspent-program-keypair.json \
+    -k keys/localnet-deployer-keypair.json --url $U 2>&1) && { echo "$OUT" | grep "Program Id"; break; }
+  echo "deploy attempt $try failed: $(echo "$OUT" | tail -1)"
+  [ "$try" = 3 ] && exit 1
+  sleep 3
+done
 rm -f keys/localnet-credit-mint-keypair.json
 cd ops
 [ "${NO_LAUNCH:-}" = "1" ] || NETWORK=localnet \

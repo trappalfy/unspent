@@ -64,6 +64,11 @@ const PROGRAM_ERRORS: Record<number, string> = {
   6018: "That reservation hasn't expired yet.",
   6021: "That reservation belongs to another wallet.",
   6026: "Value is outside the allowed range.",
+  6002: "The treasury must be a USDC account other than the reserve.",
+  6028: "There's no pending change for this field.",
+  6029: "This change isn't effective yet.",
+  6030: "No backup gateway key is set.",
+  6031: "The vault or reserve holds less than it owes. Nothing was moved.",
 };
 
 type TxErr = { InstructionError?: [number, { Custom?: number } | string] } | string | null | undefined;
@@ -85,6 +90,8 @@ export function explainError(err: unknown, programs: Address[], logs: string[] =
     return PROGRAM_ERRORS[code];
   if (program === "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" && code === 1)
     return "Not enough tokens in your wallet for this.";
+  if (program === "BPFLoaderUpgradeab1e11111111111111111111111")
+    return "The program loader refused this. Check that the buffer is complete and its authority is this wallet.";
   if (program === "11111111111111111111111111111111" && code === 1)
     return "Not enough SOL for this transaction and the accounts it creates.";
   if (logs.some((l) => /slippage/i.test(l)))

@@ -33,7 +33,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     );
   }
   const [session, program] = await Promise.all([getSession(), getProgram()]);
-  const links = program?.shutDown ? [...LINKS, ["/app/redeem", "Redeem"] as [string, string]] : LINKS;
+  const links: [string, string][] = [
+    ...LINKS,
+    ...(program?.shutDown ? [["/app/redeem", "Redeem"] as [string, string]] : []),
+    ...(program && session?.address === program.admin ? [["/app/admin", "Admin"] as [string, string]] : []),
+  ];
   return (
     <WalletProvider initialAddress={session?.address ?? null}>
       <div className="mx-auto max-w-[1280px] px-4 md:px-8">

@@ -16,9 +16,12 @@ import {
   TOKEN_PROGRAM_ADDRESS,
 } from "@solana-program/token";
 import {
+  type ConfigField,
+  decodeUpgradeAuthority,
   fetchMaybeConfig,
   fetchMaybeUserAccount,
   findConfigPda,
+  findProgramDataAddress,
   findUserPda,
   getReservationDecoder,
   RESERVATION_DISCRIMINATOR,
@@ -27,8 +30,13 @@ import {
 
 export type AppRpc = Rpc<SolanaRpcApi>;
 
+export type PendingRow = { field: ConfigField; value: bigint; key: Address; effectiveAt: bigint };
+
 export type ProgramState = {
   config: Address;
+  admin: Address;
+  gateway: Address | null;
+  gatewayBackup: Address | null;
   creditMint: Address;
   usdcMint: Address;
   reserve: Address;
@@ -42,8 +50,11 @@ export type ProgramState = {
   supplyCap: bigint;
   maxReservation: bigint;
   maxReservedPerUser: bigint;
+  burnCapPerWindow: bigint;
   reservationTtl: bigint;
   adminDelay: bigint;
+  /** Delayed changes waiting for admin_delay (brief 6.2). */
+  pending: PendingRow[];
   totalUserBalance: bigint;
   activeReserved: bigint;
   totalBurned: bigint;
@@ -89,6 +100,9 @@ export async function readProgram(rpc: AppRpc): Promise<ProgramState | null> {
   const mint = await fetchMaybeMint(rpc, c.creditMint, { commitment: "confirmed" });
   return {
     config,
+    admin: c.admin,
+    gateway: c.gateway.__option === "Some" ? c.gateway.value : null,
+    gatewayBackup: c.gatewayBackup.__option === "Some" ? c.gatewayBackup.value : null,
     creditMint: c.creditMint,
     usdcMint: c.usdcMint,
     reserve: c.reserve,
@@ -102,8 +116,10 @@ export async function readProgram(rpc: AppRpc): Promise<ProgramState | null> {
     supplyCap: c.supplyCap,
     maxReservation: c.maxReservation,
     maxReservedPerUser: c.maxReservedPerUser,
+    burnCapPerWindow: c.burnCapPerWindow,
     reservationTtl: c.reservationTtl,
     adminDelay: c.adminDelay,
+    pending: c.pending.flatMap((p, field) => (p.effectiveAt === 0n ? [] : [{ field, ...p }])),
     totalUserBalance: c.totalUserBalance,
     activeReserved: c.activeReserved,
     totalBurned: c.totalBurned,
@@ -112,6 +128,14 @@ export async function readProgram(rpc: AppRpc): Promise<ProgramState | null> {
     totalSweptUsdc: c.totalSweptUsdc,
     supply: mint.exists ? mint.data.supply : 0n,
   };
+}
+
+/** The program's upgrade authority; null once upgrades are frozen (Q12). */
+export async function readUpgradeAuthority(rpc: AppRpc): Promise<Address | null> {
+  const { value } = await rpc
+    .getAccountInfo(await findProgramDataAddress(), { encoding: "base64", commitment: "confirmed" })
+    .send();
+  return value ? decodeUpgradeAuthority(getBase64Encoder().encode(value.data[0]) as Uint8Array) : null;
 }
 
 export async function readUser(rpc: AppRpc, owner: string): Promise<UserState> {
