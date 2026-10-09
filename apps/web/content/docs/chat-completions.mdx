@@ -1,0 +1,65 @@
+import { DEFAULT_MAX_TOKENS } from "@unspent/shared";
+
+`POST {API_BASE}/v1/chat/completions` takes the OpenAI Chat Completions format for Claude models. Unspent translates the request to the Messages API and the answer back.
+
+```ts
+import OpenAI from "openai";
+
+const client = new OpenAI({ baseURL: "{API_BASE}/v1", apiKey: process.env.UNSPENT_API_KEY });
+```
+
+Prompt caching, extended thinking, web search and client tools have no equivalent in this format. Use the [Messages API](/docs/messages) for them.
+
+## Supported
+
+| OpenAI | Becomes |
+|---|---|
+| `system` and `developer` messages | Joined with a newline into `system` |
+| `user` and `assistant` text | Text blocks |
+| `image_url` parts: data URLs and https URLs; JPEG, PNG, GIF, WebP | Image blocks |
+| `tools` of type `function`, `tool_choice`, `parallel_tool_calls` | Tools with `input_schema`, `tool_choice` |
+| `assistant.tool_calls` and `tool` messages | `tool_use` and `tool_result` blocks |
+| `max_completion_tokens` or `max_tokens` | `max_tokens`, {DEFAULT_MAX_TOKENS.toLocaleString("en-US")} if neither is set |
+| `stop` | `stop_sequences` |
+| `n` | Only `1` |
+| `stream`, `stream_options.include_usage` | `chat.completion.chunk` events, then `data: [DONE]` |
+
+A request holds its worst-case cost before it runs, and `max_tokens` is part of it. Without `max_tokens` a request holds {DEFAULT_MAX_TOKENS.toLocaleString("en-US")} tokens of output.
+
+## Ignored
+
+These fields are accepted and dropped, so existing code keeps working:
+
+`temperature`, `top_p`, `response_format`, `logprobs`, `top_logprobs`, `seed`, `reasoning_effort`, `frequency_penalty`, `presence_penalty`, `logit_bias`, `user`, `metadata`, `store`, `service_tier`, `prediction`, `modalities`, `audio`.
+
+`temperature` and `top_p` are dropped because current Claude models accept only their default sampling settings. Unknown fields are ignored as well.
+
+## Rejected
+
+`functions`, `function_call` and messages with role `function` return `400 unsupported_parameter`. That is the legacy function calling: dropping it silently would mean the model never calls your functions. Use `tools` and `tool_choice`.
+
+## Response
+
+- `choices[0].message` holds the text and any `tool_calls`.
+- `finish_reason` is `stop` for a normal end or a stop sequence, `length` when `max_tokens` is reached, `tool_calls` when the model calls a tool and `content_filter` for a refusal.
+- `usage.prompt_tokens` counts input plus cache reads and writes, `completion_tokens` counts output with thinking, `prompt_tokens_details.cached_tokens` counts cache reads.
+
+Every response, and the last chunk of a stream, carries an `unspent` field with the request's cost and your balance after it:
+
+```json
+"unspent": {
+  "request_id": "3f9c0e…",
+  "credits_charged": "0.01035",
+  "available": "24.98965"
+}
+```
+
+## Errors
+
+Errors use the OpenAI format:
+
+```json
+{ "error": { "message": "Not enough credits. …", "type": "insufficient_quota", "code": "insufficient_credits" } }
+```
+
+The full list: [Errors](/docs/errors).

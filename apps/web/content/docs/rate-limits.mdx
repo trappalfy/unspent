@@ -1,0 +1,24 @@
+import { RATE_LIMITS } from "@unspent/shared";
+
+| Limit | Value | When exceeded |
+|---|---|---|
+| Requests per minute | {RATE_LIMITS.requestsPerMinute} per key, and {RATE_LIMITS.requestsPerMinute} per wallet across all its keys | `429 rate_limit_exceeded` |
+| Requests at once | {RATE_LIMITS.concurrent} per key, and {RATE_LIMITS.concurrent} per wallet | `429 rate_limit_exceeded` |
+| Hold per request | <Limit name="maxReservation" /> | `400 request_too_expensive` |
+| Held at once per wallet | <Limit name="maxReservedPerUser" />, or your own lower hold limit | `429 too_many_in_flight` |
+| Daily limit per key | Optional, set by you | `429 key_limit_exceeded` |
+| Active keys | {RATE_LIMITS.maxKeysPerWallet} per wallet | Create fails |
+
+`429` responses carry `retry-after` in seconds. Wallet limits are the sum over all of a wallet's keys, so more keys don't mean more throughput.
+
+## Hold limit
+
+The program caps how much of one wallet's balance running requests can hold at once. You can set a lower cap for your wallet on [/app/balance](/app/balance). The program enforces it, so it also limits how much a leaked key can hold at a time. A leaked key can still spend over time: revoke it on [/app/keys](/app/keys).
+
+## Daily limit
+
+A key's daily limit counts the credits it spent since 00:00 UTC plus what its running requests hold. Set it when you create the key on [/app/keys](/app/keys).
+
+## Provider limits
+
+When the model provider rate-limits a request, its `429` comes back unchanged with its retry headers, and nothing is charged.

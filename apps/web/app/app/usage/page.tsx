@@ -2,6 +2,7 @@ import { CLAUDE_MODELS } from "@unspent/shared";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Credits, Empty, PageTitle } from "@/components/app/ui";
+import { TableWrap } from "@/components/TableWrap";
 import { explorerTx, network } from "@/lib/env";
 import { listKeys } from "@/lib/keys";
 import { getDb } from "@/lib/server/db";
@@ -94,7 +95,7 @@ export default async function UsagePage({ searchParams }: { searchParams: SP }) 
           )}
         </Empty>
       ) : (
-        <div className="table-wrap">
+        <TableWrap label="Requests">
           <table>
             <thead>
               <tr>
@@ -154,7 +155,7 @@ export default async function UsagePage({ searchParams }: { searchParams: SP }) 
               ))}
             </tbody>
           </table>
-        </div>
+        </TableWrap>
       )}
       <div className="mt-4 flex gap-4 text-sm">
         {q.before && (

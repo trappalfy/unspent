@@ -1,0 +1,99 @@
+The Unspent program runs on Solana. It holds the USDC behind every credit, keeps every API balance and records every request.
+
+## Addresses
+
+<Addresses />
+
+## Accounts
+
+| Account | Seeds | Holds |
+|---|---|---|
+| Config | `"config"` | Limits, pause flags, totals, the admin, gateway and treasury keys |
+| User account | `"user"`, owner | `balance`, `reserved` and the hold limit of one wallet |
+| Reservation | `"res"`, request id | One request's hold: owner, amount, expiry, rent payer |
+| Reserve | `"reserve"` | USDC token account behind the credits in circulation |
+| Vault | `"vault"` | Credit token account holding all API balances |
+
+All of them are program-derived addresses of the program above.
+
+## Instructions
+
+| Instruction | Who signs | What it does |
+|---|---|---|
+| `buy_credits` | Buyer | Moves USDC into the reserve and mints the same number of credits to the buyer |
+| `deposit` | Owner | Moves credits from the wallet into the vault |
+| `withdraw` | Owner | Moves available credits back to the wallet. Closes expired holds passed with it |
+| `set_my_reserve_cap` | Owner | Sets the wallet's own hold limit |
+| `redeem` | Any holder, after shutdown | Burns credits and pays the same amount of USDC from the reserve |
+| `reserve` | Gateway | Holds a request's worst-case cost |
+| `settle`, `settle_many` | Gateway | Burns the actual cost, at most the hold, moves the same amount of USDC from the reserve to the treasury and releases the rest |
+| `expire` | Anyone | Releases a hold after it expires |
+| `apply_pending` | Anyone | Applies a delayed change once its time has come |
+| `set_limit` | Admin | Lowers a limit at once. Raising it is a delayed change |
+| `set_pause` | Admin | Pauses purchases, deposits or the gateway |
+| `propose_treasury`, `propose_gateway_backup`, `cancel_pending` | Admin | Delayed changes of the treasury and the backup gateway key |
+| `revoke_gateway`, `activate_backup_gateway` | Admin | Removes a compromised gateway key, switches to the approved backup key |
+| `shutdown` | Admin | Stops purchases, deposits and new holds for good and opens `redeem` |
+| `sweep_surplus` | Admin | Moves USDC above the credits in circulation to the treasury |
+
+## What the admin and the gateway can't do
+
+- Move credits out of API balances or USDC out of the reserve other than through the instructions above. The gateway can only burn what a request it held settles for, never more than the hold.
+- Block withdrawals or expiry. Neither needs anyone's approval, and pauses don't stop them.
+- Make a change fast. Raising a limit, changing the treasury, the backup gateway key or the delay itself takes <Limit name="adminDelay" /> and is visible onchain as a pending change from the start. Withdrawals are instant, so everyone has time to leave before a change applies.
+- Sweep more than the surplus. `sweep_surplus` takes only USDC above the credits in circulation, for example USDC left behind by credits someone burned themselves. It never touches balances or holds.
+
+## Program upgrades
+
+Every credit is backed by 1 USDC as long as the program's code is the code described here. Until upgrades are frozen, the upgrade authority can replace that code, so the backing also depends on whoever holds that key.
+
+Upgrade authority right now: <UpgradeAuthority />.
+
+## Check the reserve
+
+- Credits in circulation: the supply of the credit mint.
+- USDC in reserve: the balance of the reserve account.
+
+The reserve is never smaller than the supply. [/reserve](/reserve) shows both live with the coverage, totals and the latest settlements. Any Solana explorer shows the same numbers.
+
+## Check a request
+
+Every API response carries `x-unspent-request-id`: the request's 32-byte id in hex. Its reservation address is derived from it, and that address's history holds the request's two transactions: `reserve` and then `settle` (or `expire` if it never settled).
+
+```ts
+import { createSolanaRpc, getProgramDerivedAddress } from "@solana/kit";
+
+const requestId = "3f9c0e…"; // x-unspent-request-id
+const [reservation] = await getProgramDerivedAddress({
+  programAddress: "5YSrsYtX6UnSx8KAbiD8RWM7UzNNXU3w5QhxSA2vvfkx",
+  seeds: ["res", Uint8Array.from(Buffer.from(requestId, "hex"))],
+});
+const rpc = createSolanaRpc("https://api.mainnet-beta.solana.com");
+const history = await rpc.getSignaturesForAddress(reservation).send();
+```
+
+The `reserve` transaction logs a `Reserved` event with the hold. The `settle` transaction logs a `Settled` event with `actual`: what the request cost. Settlements are batched, so one `settle_many` transaction can settle several requests. [/app/usage](/app/usage) links both transactions of every request.
+
+## Events
+
+Events are Anchor events in the program's logs. Amounts are in base units: 1 credit is 1,000,000.
+
+| Event | Fields |
+|---|---|
+| `CreditsBought` | `buyer`, `amount` |
+| `Deposited` | `owner`, `amount` |
+| `Withdrawn` | `owner`, `amount` |
+| `ReserveCapSet` | `owner`, `cap` |
+| `Reserved` | `owner`, `request_id`, `amount`, `expires_at` |
+| `Settled` | `owner`, `request_id`, `reserved`, `actual` |
+| `Expired` | `owner`, `request_id`, `amount` |
+| `Redeemed` | `owner`, `amount` |
+| `ShutDown` | none |
+| `SurplusSwept` | `usdc`, `credits` |
+| `LimitChanged` | `field`, `value` |
+| `PauseSet` | `target`, `paused` |
+| `ChangeProposed` | `field`, `value`, `key`, `effective_at` |
+| `ChangeApplied` | `field`, `value`, `key` |
+| `ChangeCancelled` | `field` |
+| `GatewayRevoked` | none |
+| `BackupGatewayActivated` | `gateway` |

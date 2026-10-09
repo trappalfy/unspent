@@ -4,7 +4,7 @@
 :root {
   --bg: #000000;
   --fg: #f5f5f5;
-  --mute: #6b6b6b;
+  --mute: #777777; /* #6B6B6B in the brief; lightened to pass WCAG AA on black (owner, stage 8) */
   --dim: #2a2a2a;
   --line: #1c1c1c;
   --hero-lime: #dbf150;
@@ -166,6 +166,20 @@ input[type="checkbox"] {
   line-height: 1;
 }
 
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -100px;
+  z-index: 50;
+  padding: 8px 12px;
+  background: var(--fg);
+  color: var(--bg);
+  font: 500 14px / 1.4 var(--mono);
+}
+.skip-link:focus {
+  top: 8px;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -281,19 +295,159 @@ input[type="checkbox"] {
   }
 }
 
-/* FAQ accordion: native <details>, keyboard accessible. */
-.faq summary {
+/* FAQ accordion and the Docs menu on phones: native <details>, keyboard accessible. */
+.faq summary,
+.docs-menu summary {
   list-style: none;
 }
-.faq summary::-webkit-details-marker {
+.faq summary::-webkit-details-marker,
+.docs-menu summary::-webkit-details-marker {
   display: none;
 }
-.faq summary::after {
+.faq summary::after,
+.docs-menu summary::after {
   content: "+";
   color: var(--mute);
 }
-.faq[open] summary::after {
+.faq[open] summary::after,
+.docs-menu[open] summary::after {
   content: "–";
+}
+
+/* Docs (MDX, brief 11.7): headings and code in mono, running text in sans. */
+.docs {
+  max-width: 800px;
+}
+.docs > h1 {
+  font-size: 28px;
+  line-height: 1.15;
+}
+@media (min-width: 768px) {
+  .docs > h1 {
+    font-size: 44px;
+  }
+}
+.docs-lead {
+  margin: 12px 0 8px;
+  font: 400 18px / 1.5 var(--sans);
+  color: rgb(245 245 245 / 0.7);
+}
+.docs h2 {
+  margin: 48px 0 12px;
+  font: 800 20px / 1.3 var(--mono);
+  letter-spacing: -0.01em;
+  scroll-margin-top: 16px;
+}
+.docs h3 {
+  margin: 32px 0 8px;
+  font: 500 16px / 1.4 var(--mono);
+  scroll-margin-top: 16px;
+}
+.docs p,
+.docs li {
+  font: 400 16px / 1.65 var(--sans);
+  color: rgb(245 245 245 / 0.85);
+}
+.docs p {
+  margin: 12px 0;
+}
+.docs ul,
+.docs ol {
+  margin: 12px 0;
+  padding-left: 22px;
+}
+.docs ul {
+  list-style: square;
+}
+.docs ol {
+  list-style: decimal;
+}
+.docs li {
+  margin: 6px 0;
+  padding-left: 4px;
+}
+.docs li::marker {
+  color: var(--mute);
+}
+.docs strong {
+  font-weight: 600;
+  color: var(--fg);
+}
+.docs a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--mute);
+  text-underline-offset: 3px;
+}
+.docs a:hover {
+  text-decoration-color: var(--fg);
+}
+.docs .docs-anchor {
+  text-decoration: none;
+}
+.docs .docs-anchor:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.docs :not(pre) > code {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  background: #0d0d0d;
+  color: var(--fg);
+  font: 400 0.85em var(--mono);
+  overflow-wrap: anywhere;
+}
+.docs .table-wrap {
+  margin: 16px 0;
+}
+.docs .table-wrap td {
+  vertical-align: top;
+}
+/* Inside tables code stays on one line; a wide table scrolls in its own box. */
+.docs .table-wrap code {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+.docs-code {
+  margin: 16px 0;
+  border: 1px solid var(--line);
+}
+.docs-code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 4px 0 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--mute);
+  font: 400 12px / 1 var(--mono);
+}
+.docs-code pre {
+  margin: 0;
+  padding: 16px;
+  overflow-x: auto;
+  color: var(--fg);
+  font: 400 13px / 1.6 var(--mono);
+}
+.docs-pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.docs .docs-pager a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+  text-decoration: none;
+}
+.docs .docs-pager a:hover span:last-child {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 /* Terminal cursor █ */

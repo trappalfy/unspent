@@ -3,6 +3,7 @@
 import { type FormEvent, useState, useTransition } from "react";
 import { createKeyAction, revokeKeyAction } from "@/app/app/keys/actions";
 import { CopyButton } from "@/components/CopyButton";
+import { TableWrap } from "@/components/TableWrap";
 import { credits } from "@/lib/format";
 import type { KeyRow } from "@/lib/keys";
 import { Empty, Notice, Panel } from "./ui";
@@ -41,7 +42,8 @@ function CreateKey({ models, apiBase }: { models: Model[]; apiBase: string }) {
           <CopyButton value={secret} />
         </div>
         <p className="text-sm text-mute">Use it with Claude Code:</p>
-        <pre className="overflow-x-auto border border-line p-3 text-xs">
+        {/* biome-ignore lint/a11y/noNoninteractiveTabindex: long lines scroll; the scroll needs keyboard access */}
+        <pre tabIndex={0} className="overflow-x-auto border border-line p-3 text-xs">
           {`export ANTHROPIC_BASE_URL=${apiBase}\nexport ANTHROPIC_AUTH_TOKEN=${secret}\nclaude`}
         </pre>
         <button type="button" className="btn self-start" onClick={() => setSecret(null)}>
@@ -137,7 +139,7 @@ export function KeysManager({ keys, models, apiBase }: { keys: KeyRow[]; models:
       {active.length === 0 ? (
         <Empty>No API keys yet. Create one to start spending credits.</Empty>
       ) : (
-        <div className="table-wrap">
+        <TableWrap label="API keys">
           <table>
             <thead>
               <tr>
@@ -170,7 +172,7 @@ export function KeysManager({ keys, models, apiBase }: { keys: KeyRow[]; models:
               ))}
             </tbody>
           </table>
-        </div>
+        </TableWrap>
       )}
       {revoked.length > 0 && (
         <details className="text-sm">

@@ -1,0 +1,68 @@
+import {
+  MARKUP_BPS,
+  MIN_CHARGE_UCR,
+  RESERVE_TIER_HEADROOM_BPS,
+  ucrToCredits,
+  WEB_SEARCH_HOLD_USES,
+  WEB_SEARCH_RESULT_TOKENS,
+} from "@unspent/shared";
+
+## Models
+
+<ModelList />
+
+The same list with prices comes from `GET {API_BASE}/v1/models`, in a format both the Anthropic and the OpenAI SDK read.
+
+## Prices
+
+Credits per 1M tokens. One credit is $1.
+
+<PricingTable />
+
+Prices are the provider's list prices plus {MARKUP_BPS / 100}%. There is no other fee.
+
+- **Haiku 5.5** has two tiers. A request's prompt is its input, cache read and cache write tokens together. Above 100,000 the whole request is priced at the second tier.
+- **Thinking** tokens are output tokens.
+- **Minimum charge:** {ucrToCredits(MIN_CHARGE_UCR)} credit per request. It covers the two Solana transactions behind every request.
+- Each request's cost is rounded up to the nearest 0.000001 credit.
+
+### Web search
+
+<WebSearchPrice />. Search results join the prompt and are billed as input tokens.
+
+## Examples
+
+These tables are computed from the same prices and code the API uses.
+
+### Sonnet 5.5: 2,000 input tokens, 500 output tokens
+
+<CostExample model="claude-sonnet-5-5" input={2000} output={500} />
+
+### Opus 5.5: one Claude Code turn
+
+3,000 new input tokens, 80,000 tokens read from the cache, 2,000 written to the 5-minute cache, 1,200 output tokens:
+
+<CostExample model="claude-opus-5-5" input={3000} cacheRead={80000} cacheWrite5m={2000} output={1200} />
+
+### Haiku 5.5: a long prompt
+
+120,000 input tokens and 1,000 output tokens. The prompt is over 100,000, so the whole request uses the second tier:
+
+<CostExample model="claude-haiku-5-5" input={120000} output={1000} />
+
+## What a request holds
+
+Before the model runs, a request holds its worst-case cost on your API balance:
+
+- **Input:** text bytes divided by 3, at most the model's context window. It is priced at the 1-hour cache write rate if any `cache_control` has `ttl: "1h"`, at the 5-minute rate if there is any other `cache_control`, and at the input rate otherwise. Requests with images or documents are counted exactly with the provider's token counter.
+- **Output:** `max_tokens` at the output rate. Thinking is part of `max_tokens`.
+- **Web search:** `max_uses` searches, or {WEB_SEARCH_HOLD_USES} if it is not set, each with {WEB_SEARCH_RESULT_TOKENS.toLocaleString("en-US")} tokens of results.
+- **Haiku 5.5** holds at the second tier once the input estimate passes {(100_000 * RESERVE_TIER_HEADROOM_BPS / 10_000).toLocaleString("en-US")} tokens.
+
+Sonnet 5.5 with 6,000 bytes of text and `max_tokens: 1024`:
+
+<HoldExample model="claude-sonnet-5-5" textBytes={6000} maxTokens={1024} />
+
+When the request ends, the program burns its actual cost and releases the rest. You are never charged more than the hold: if the actual cost is higher, Unspent pays the difference.
+
+One request can hold at most <Limit name="maxReservation" />. A request with a larger worst case gets `400 request_too_expensive`: lower its `max_tokens`.

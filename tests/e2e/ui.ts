@@ -38,6 +38,7 @@ import { AnthropicUpstream } from "../../services/gateway/src/upstream";
 import { startMockAnthropic } from "../../services/gateway/test/mock/mockAnthropic";
 import { Indexer } from "../../services/indexer/src/indexer";
 import { createLogger as indexerLogger } from "../../services/indexer/src/log";
+import { axe, describe } from "./axe";
 
 const ROOT = new URL("../../", import.meta.url).pathname;
 const RPC = "http://127.0.0.1:8899";
@@ -388,9 +389,8 @@ async function main() {
   await page.getByText("No market for credits yet.").waitFor({ timeout: 60_000 });
   ok("sell explains there's no market yet", true);
 
-  // 10. Phone width: no horizontal page scroll anywhere
-  await page.setViewportSize({ width: 390, height: 844 });
-  for (const path of [
+  // 10. Phone and tablet widths: no horizontal page scroll anywhere; WCAG 2.1 AA (axe) on every page with live data.
+  const appPages = [
     "/app",
     "/app/buy",
     "/app/balance",
@@ -398,12 +398,22 @@ async function main() {
     "/app/usage",
     "/app/sell",
     "/reserve",
-  ]) {
-    await page.goto(`${WEB}${path}`);
-    await page.waitForLoadState("networkidle");
-    const sw = await page.evaluate(() => document.documentElement.scrollWidth);
-    ok(`390px ${path}: no horizontal scroll (${sw})`, sw <= 390);
-    await shot(`m-${path.replaceAll("/", "_") || "root"}`);
+    "/",
+  ];
+  for (const width of [390, 768]) {
+    await page.setViewportSize({ width, height: 844 });
+    for (const path of appPages) {
+      await page.goto(`${WEB}${path}`);
+      await page.waitForLoadState("networkidle");
+      const sw = await page.evaluate(() => document.documentElement.scrollWidth);
+      ok(`${width}px ${path}: no horizontal scroll (${sw})`, sw <= width);
+      if (width === 390) {
+        await shot(`m-${path.replaceAll("/", "_") || "root"}`);
+        const v = await axe(page);
+        if (v.length) console.log(`    ${describe(v)}`);
+        ok(`390px ${path}: axe WCAG 2.1 AA`, v.length === 0);
+      }
+    }
   }
   // 11. Irreversible, opt-in: admin shuts Unspent down → banner on every app page → redeem everything 1:1 in the UI.
   if (process.env.E2E_SHUTDOWN === "1") {

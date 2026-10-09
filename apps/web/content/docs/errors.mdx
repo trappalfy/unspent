@@ -1,0 +1,55 @@
+import { MIN_CHARGE_UCR, ucrToCredits } from "@unspent/shared";
+
+Unspent's own errors use the Anthropic format on `/v1/messages`:
+
+```json
+{ "type": "error", "error": { "type": "billing_error", "message": "Not enough credits. …" } }
+```
+
+and the OpenAI format on `/v1/chat/completions`:
+
+```json
+{ "error": { "message": "Not enough credits. …", "type": "insufficient_quota", "code": "insufficient_credits" } }
+```
+
+None of them is charged. Messages say what happened and what to do.
+
+## Gateway errors
+
+| Status | Anthropic type | OpenAI code | When |
+|---|---|---|---|
+| 400 | `invalid_request_error` | `invalid_request` | The body is not a JSON object, or `Idempotency-Key` is not 8–128 characters |
+| 400 | `invalid_request_error` | `unsupported_parameter` | A tool type or field Unspent doesn't offer, see [Messages API](/docs/messages#what-is-rejected) |
+| 400 | `invalid_request_error` | `model_not_found` | The model is not on Unspent, or the key doesn't allow it |
+| 400 | `invalid_request_error` | `request_too_expensive` | The worst-case cost is over the per-request limit. Lower `max_tokens` |
+| 401 | `authentication_error` | `invalid_api_key` | The key is missing, unknown or revoked |
+| 402 | `billing_error` | `insufficient_credits` | The hold doesn't fit your available balance. Lower `max_tokens` or top up |
+| 409 | `invalid_request_error` | `request_in_progress` | A request with this `Idempotency-Key` is still running |
+| 409 | `invalid_request_error` | `already_processed` | A request with this `Idempotency-Key` already ran. The body has its `request_id` and `credits_charged` |
+| 409 | `invalid_request_error` | `idempotency_key_reused` | This `Idempotency-Key` was used with a different body |
+| 410 | `invalid_request_error` | `service_shut_down` | Unspent is shut down. Withdraw and redeem your credits |
+| 429 | `rate_limit_error` | `rate_limit_exceeded` | Too many requests per minute or at once |
+| 429 | `rate_limit_error` | `too_many_in_flight` | Running requests already hold your wallet's hold limit |
+| 429 | `rate_limit_error` | `key_limit_exceeded` | The key reached its daily limit |
+| 500 | `api_error` | `internal_error` | Unexpected error. A hold, if one was made, is released automatically |
+| 503 | `overloaded_error` | `reservation_timeout` | Solana didn't confirm the hold within 20 seconds |
+| 503 | `overloaded_error` | `reservation_failed` | The program didn't accept the hold |
+| 503 | `overloaded_error` | `provider_unavailable` | The model provider is unavailable |
+
+In the OpenAI format `authentication_error` becomes `invalid_request_error`, `billing_error` becomes `insufficient_quota`, and `api_error` and `overloaded_error` become `server_error`.
+
+Most `429` and `503` responses carry `retry-after` in seconds. Paths that don't exist return `404 not_found_error`.
+
+## Provider errors
+
+Errors from the model provider are forwarded with their status, body and retry headers unchanged.
+
+| Provider error | Charged |
+|---|---|
+| `400`, `413`, `422`: the provider rejected the request | {ucrToCredits(MIN_CHARGE_UCR)} credit, the minimum charge |
+| `401`, `403` on Unspent's provider key | Nothing. Returned as `503 provider_unavailable` |
+| `429`, `500`, `529` and other errors | Nothing |
+
+## Streams that end early
+
+If the provider ends a stream early, you pay for the tokens generated until then. When the final usage is missing, the output is estimated from the text received at 3.5 characters per token, and the request is marked as estimated.

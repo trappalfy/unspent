@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { Empty, Stat } from "@/components/app/ui";
 import { Roll } from "@/components/Roll";
+import { TableWrap } from "@/components/TableWrap";
 import { countReservations, readReserveBalances } from "@/lib/chain/read";
 import { explorerAddress, explorerTx, network } from "@/lib/env";
 import { getDb } from "@/lib/server/db";
@@ -60,21 +61,37 @@ async function settlements() {
   }
 }
 
+async function load() {
+  try {
+    const program = await getProgram(0);
+    if (!program) return null;
+    const rpc = serverRpc();
+    const [balances, holds, recent] = await Promise.all([
+      readReserveBalances(rpc, program),
+      countReservations(rpc),
+      settlements(),
+    ]);
+    return { program, balances, holds, recent };
+  } catch {
+    return "unavailable" as const;
+  }
+}
+
 export default async function ReservePage() {
-  const program = await getProgram(0);
-  if (!program)
+  const data = await load();
+  if (data === null || data === "unavailable")
     return (
       <section className="mx-auto max-w-[1280px] px-4 py-16 md:px-8">
+        <AutoRefresh seconds={15} />
         <h1 className="text-xl">Reserve</h1>
-        <p className="mt-4 text-sm text-mute">Unspent isn&apos;t running on this network yet.</p>
+        <p className="mt-4 text-sm text-mute">
+          {data === null
+            ? "Unspent isn’t running on this network yet."
+            : "The chain can’t be read right now. This page retries every 15 seconds."}
+        </p>
       </section>
     );
-  const rpc = serverRpc();
-  const [balances, holds, recent] = await Promise.all([
-    readReserveBalances(rpc, program),
-    countReservations(rpc),
-    settlements(),
-  ]);
+  const { program, balances, holds, recent } = data;
 
   return (
     <section className="mx-auto flex max-w-[1280px] flex-col gap-8 px-4 py-12 md:px-8">
@@ -84,7 +101,7 @@ export default async function ReservePage() {
         <p className="max-w-2xl text-sm text-mute">
           Every credit in circulation is backed by 1 USDC held by the program, not by Unspent. These numbers
           are read from the chain and refresh every 15 seconds. Until program upgrades are frozen, this also
-          depends on the upgrade multisig; see{" "}
+          depends on whoever holds the program&apos;s upgrade authority; see{" "}
           <Link className="underline" href="/docs/onchain">
             Onchain
           </Link>
@@ -141,7 +158,7 @@ export default async function ReservePage() {
         ) : recent.length === 0 ? (
           <Empty>No settlements yet.</Empty>
         ) : (
-          <div className="table-wrap">
+          <TableWrap label="Latest settlements">
             <table>
               <thead>
                 <tr>
@@ -177,7 +194,7 @@ export default async function ReservePage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableWrap>
         )}
       </div>
 

@@ -1,4 +1,5 @@
 import type { HistoryEvent } from "@unspent/indexer";
+import { TableWrap } from "@/components/TableWrap";
 import { explorerTx } from "@/lib/env";
 import { Credits, Empty, Panel } from "./ui";
 
@@ -23,7 +24,7 @@ export function Activity({ events }: { events: HistoryEvent[] | null }) {
       ) : rows.length === 0 ? (
         <Empty>No activity yet. Purchases, deposits and withdrawals show up here.</Empty>
       ) : (
-        <div className="table-wrap">
+        <TableWrap label="Activity">
           <table>
             <thead>
               <tr>
@@ -66,7 +67,7 @@ export function Activity({ events }: { events: HistoryEvent[] | null }) {
               })}
             </tbody>
           </table>
-        </div>
+        </TableWrap>
       )}
     </Panel>
   );

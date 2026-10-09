@@ -59,7 +59,8 @@ claude`,
         </div>
       </div>
       <div role="tabpanel" id="code-panel" aria-labelledby={`code-tab-${active}`}>
-        <pre className="overflow-x-auto p-4 text-xs leading-relaxed md:p-6 md:text-sm">
+        {/* biome-ignore lint/a11y/noNoninteractiveTabindex: long lines scroll; the scroll needs keyboard access */}
+        <pre tabIndex={0} className="overflow-x-auto p-4 text-xs leading-relaxed md:p-6 md:text-sm">
           <code>{code}</code>
         </pre>
       </div>

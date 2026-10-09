@@ -43,6 +43,7 @@ export type ProgramState = {
   maxReservation: bigint;
   maxReservedPerUser: bigint;
   reservationTtl: bigint;
+  adminDelay: bigint;
   totalUserBalance: bigint;
   activeReserved: bigint;
   totalBurned: bigint;
@@ -102,6 +103,7 @@ export async function readProgram(rpc: AppRpc): Promise<ProgramState | null> {
     maxReservation: c.maxReservation,
     maxReservedPerUser: c.maxReservedPerUser,
     reservationTtl: c.reservationTtl,
+    adminDelay: c.adminDelay,
     totalUserBalance: c.totalUserBalance,
     activeReserved: c.activeReserved,
     totalBurned: c.totalBurned,

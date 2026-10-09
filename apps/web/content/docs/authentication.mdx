@@ -1,0 +1,43 @@
+import { RATE_LIMITS } from "@unspent/shared";
+
+## API keys
+
+A key is `usp_live_` followed by 32 letters and digits. Send it in either header:
+
+```text
+x-api-key: usp_live_...
+Authorization: Bearer usp_live_...
+```
+
+Both work on every endpoint. The Anthropic SDK sends `x-api-key`. The OpenAI SDK and Claude Code's `ANTHROPIC_AUTH_TOKEN` send `Authorization: Bearer`.
+
+## Keys belong to a wallet
+
+You create keys on [/app/keys](/app/keys) after signing in with your wallet. Signing in is a message signature, not a transaction, and costs nothing.
+
+A key spends the API balance of the wallet that created it, and only that one. It can't move credits anywhere: withdrawals need your wallet's signature.
+
+- Up to {RATE_LIMITS.maxKeysPerWallet} active keys per wallet.
+- Each key has a name, an optional daily limit in credits and an optional list of allowed models.
+- The full key is shown once. Unspent stores only its SHA-256 hash and last 4 characters, so a lost key can't be recovered: revoke it and create a new one.
+- A revoked key stops working on the next request.
+
+## Daily limit
+
+A key's daily limit counts the credits it spent since 00:00 UTC plus what its running requests hold. A request that would go over it gets `429 key_limit_exceeded`. More limits: [Rate limits](/docs/rate-limits).
+
+## Allowed models
+
+A key restricted to some models gets `400 model_not_found` for any other model.
+
+## Balance
+
+```bash
+curl {API_BASE}/v1/balance -H "x-api-key: $UNSPENT_API_KEY"
+```
+
+Returns the API balance of the key's wallet in credits, read from the program:
+
+- `available`: what requests can use and what you can withdraw;
+- `reserved`: held for running requests;
+- `balance`: both together.

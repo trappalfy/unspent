@@ -1,0 +1,44 @@
+Claude Code runs on Unspent credits through its gateway settings. Set the variables and start it:
+
+```bash
+export ANTHROPIC_BASE_URL={API_BASE}
+export ANTHROPIC_AUTH_TOKEN=usp_live_...
+export CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1
+claude
+```
+
+The third line is optional: it lists Unspent's models in `/model`.
+
+To keep the setup across sessions, put the same values in `~/.claude/settings.json`:
+
+```json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "{API_BASE}",
+    "ANTHROPIC_AUTH_TOKEN": "usp_live_..."
+  }
+}
+```
+
+Choose a model with `/model` or `claude --model claude-opus-5-5`. The list: [Models & pricing](/docs/models).
+
+## What to expect
+
+- Each request waits for its hold to confirm on Solana before the first token. That adds the confirmation time of one transaction to every request.
+- Prompt caching works as usual. Claude Code reads most of its context from the cache, at the cache read price.
+- Tools that Claude Code runs on your machine, such as bash and file edits, are billed as normal tokens.
+- Server tools Unspent doesn't offer, such as web fetch, are rejected in the provider's wording, and Claude Code carries on without them.
+- Fast mode is not available.
+- [/app/usage](/app/usage) shows spend per Claude Code session.
+
+## Interrupting a request
+
+Pressing Esc stops Claude Code from reading the answer, but the model keeps generating it. Unspent reads the stream to its end and bills everything the model generated, up to `max_tokens`. An interrupted request costs as much as one you let finish.
+
+## Many requests at once
+
+Subagents send requests in parallel. A wallet can have <Limit name="maxReservedPerUser" /> held at once, or less if you set a lower hold limit. Requests over it get `429 too_many_in_flight` with `retry-after`, and Claude Code retries them. See [Rate limits](/docs/rate-limits).
+
+## Running out of credits
+
+When a request's hold doesn't fit your available balance, Claude Code shows `Not enough credits. Available: …`. Buy more on [/app/buy](/app/buy) and continue the session.

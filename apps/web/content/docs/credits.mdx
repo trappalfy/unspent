@@ -1,0 +1,64 @@
+## Credits
+
+A credit is an SPL token on Solana with 6 decimals. One credit pays for $1 of inference at Unspent's prices. Credits don't expire.
+
+The token has no freeze authority, no transfer fees and no transfer hooks. You can hold it, send it to anyone or sell it like any other token.
+
+## Buy with USDC
+
+On [/app/buy](/app/buy) enter an amount and sign one transaction. `buy_credits` moves that much USDC into the program's reserve and mints the same number of credits to your wallet.
+
+- At least 1 credit and at most <Limit name="maxBuyPerIx" /> per purchase.
+- No purchase fee. You pay Solana network fees and, the first time, rent for your credit token account and your API balance account (about 0.002 SOL each).
+- By default the same transaction deposits the credits to your API balance. **Keep in wallet** skips the deposit.
+
+The program caps credits in circulation at <Limit name="supplyCap" />.
+
+## Buy with any token
+
+Choose a token from your wallet. The app builds one transaction: a Jupiter swap from your token to USDC, `buy_credits` for the swap's minimum output, and the deposit. If the swap returns more than its minimum, the extra USDC stays in your wallet.
+
+Before you sign, the app shows the rate, the minimum number of credits, the price impact and the route. Slippage is 0.5%, 1% or 2%. Unspent adds no fee to the swap. If Jupiter has no route for a token, buy with USDC.
+
+## API balance
+
+Credits on your API balance sit in the program's vault, an account controlled by the program, not by Unspent. The program keeps two numbers for each wallet:
+
+- `balance`: your credits in the vault;
+- `reserved`: the part held for running requests.
+
+`available` is `balance` minus `reserved`. It is what requests can use and what you can withdraw.
+
+## Deposit and withdraw
+
+Deposit moves credits from your wallet to your API balance. Withdraw moves available credits back to your wallet in the same transaction.
+
+Withdrawals don't need our approval: only your wallet signs. They work while purchases or the API are paused, and after a shutdown.
+
+## Holds and their expiry
+
+Each request holds its worst-case cost before it runs (see [Models & pricing](/docs/models#what-a-request-holds)). When it ends, the program burns the actual cost and releases the rest.
+
+If a request never settles, for example because the gateway went down, its hold expires after <Limit name="reservationTtl" />. From then on anyone can release it with the program's `expire` instruction, and the credits return to `available`.
+
+You don't need Unspent for this. [/app/balance](/app/balance) reads your holds straight from the program and releases expired ones in one transaction. A withdrawal can close expired holds in the same transaction too.
+
+## Hold limit
+
+The program caps how much one wallet can hold at once at <Limit name="maxReservedPerUser" />. You can set a lower limit for your wallet on [/app/balance](/app/balance). Requests over it get `429 too_many_in_flight`.
+
+## Sell
+
+Unspent doesn't buy credits back while the service runs: credits are sold for inference. To exit, sell them on a DEX or send them to someone who needs inference.
+
+[/app/sell](/app/sell) withdraws from your API balance if needed and swaps credits to USDC through Jupiter in one transaction, when a market for credits exists.
+
+## Shutdown and redemption
+
+If Unspent shuts down, the admin calls the program's `shutdown` instruction. It takes effect at once and can't be undone:
+
+- purchases, deposits and new holds stop;
+- running requests still settle, holds still expire, withdrawals still work;
+- `redeem` opens: anyone holding credits burns them and receives the same amount of USDC from the reserve, 1:1.
+
+[/app/redeem](/app/redeem) withdraws your API balance and redeems everything in one transaction. Credits in any wallet can be redeemed, not only those bought by that wallet.

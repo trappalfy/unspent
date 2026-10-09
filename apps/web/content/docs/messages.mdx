@@ -1,0 +1,69 @@
+`POST {API_BASE}/v1/messages` is the Anthropic Messages API. Point the Anthropic SDK or any Messages API client at Unspent and keep the rest of your code:
+
+```python
+client = Anthropic(base_url="{API_BASE}", api_key=os.environ["UNSPENT_API_KEY"])
+```
+
+Request bodies and the `anthropic-version` and `anthropic-beta` headers reach the model unchanged. Responses and streams come back unchanged, event by event.
+
+## What works
+
+| Feature | Notes |
+|---|---|
+| Streaming | Server-sent events, forwarded as they arrive |
+| Prompt caching | `cache_control` with the 5-minute and 1-hour TTL, billed at cache prices |
+| Extended thinking | Billed as output tokens |
+| Images and documents | As in the Anthropic API |
+| Your own tools | Tools without `type` or with `type: "custom"` |
+| Client tools | `bash`, `text_editor`, `memory`, `computer` and other tools your client runs, billed as normal tokens |
+| Tool search | `tool_search_tool_regex` and `tool_search_tool_bm25` |
+| Web search | `web_search_*`, billed per search, see [Models & pricing](/docs/models#web-search) |
+| Token counting | `POST /v1/messages/count_tokens`, free |
+
+## What is rejected
+
+Anything that changes the price in a way Unspent doesn't meter, or runs outside the request on the provider's side, gets `400 invalid_request_error` before anything is held or charged:
+
+- other tool types: web fetch, code execution, the MCP connector and new server tools;
+- `mcp_servers` and `container`;
+- `speed` other than `standard` (fast mode);
+- `service_tier` other than `auto` or `standard_only`;
+- `inference_geo` other than `global`;
+- `fallbacks`, `fallback_credit_token`, `compaction` and compaction edits in `context_management`.
+
+An unsupported tool type is rejected in the provider's own wording (`Input tag '…' found using 'type' does not match any of the expected tags`), so clients such as Claude Code recognize it and retry without that tool.
+
+The Batch API and the Files API are not available. Other paths under `/v1` return `404`.
+
+## How a request is billed
+
+1. Before the model runs, Unspent holds the request's worst-case cost on your API balance with a `reserve` transaction on Solana. The response starts once that transaction confirms.
+2. The request goes to the model once. Unspent never retries it at the provider.
+3. When the response ends, Unspent prices the tokens actually used and settles onchain: the program burns that many credits and releases the rest of the hold.
+
+You are never charged more than the hold. If the real cost comes out higher, Unspent pays the difference. How holds and costs are computed: [Models & pricing](/docs/models).
+
+If your client disconnects mid-stream, the model still runs to the end. You pay for everything it generated, up to `max_tokens`.
+
+## Response headers
+
+Every response carries `x-unspent-request-id`: the request's onchain id, 32 bytes in hex. With it you can find the request's two transactions, see [Onchain](/docs/onchain#check-a-request).
+
+The provider's `request-id`, `retry-after`, `x-should-retry` and `anthropic-*` headers are forwarded.
+
+## Retries and Idempotency-Key
+
+Send an `Idempotency-Key` header (8–128 characters) to make retries safe. The key is tied to your wallet and the request body for 24 hours, and a request with it never reaches the model twice:
+
+| Retry with the same key | Result |
+|---|---|
+| The first request is still running | `409 request_in_progress` |
+| The first request reached the model and finished | `409 already_processed` with its `request_id` and `credits_charged`. Responses are not stored, so it can't be returned again |
+| A different body | `409 idempotency_key_reused` |
+| The first request ended before reaching the model | Runs as a new request |
+
+The Anthropic and OpenAI SDKs retry `429` and `5xx` responses by default. Unspent's own errors cost nothing, so these retries are safe.
+
+## Errors
+
+Unspent's errors use the Anthropic error format here. Errors from the model provider are forwarded unchanged. The full list: [Errors](/docs/errors).

@@ -1,3 +1,4 @@
+import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
 
 const config: NextConfig = {
@@ -7,4 +8,12 @@ const config: NextConfig = {
   serverExternalPackages: ["postgres", "@electric-sql/pglite"],
 };
 
-export default config;
+// Docs pages live in content/docs/*.mdx. Plugins are named by string so Turbopack can load them.
+const withMDX = createMDX({
+  options: {
+    remarkPlugins: ["remark-gfm"],
+    rehypePlugins: ["rehype-slug"],
+  },
+});
+
+export default withMDX(config);

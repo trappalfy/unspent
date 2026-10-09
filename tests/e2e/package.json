@@ -6,17 +6,19 @@
     "ui": "tsx ui.ts",
     "typecheck": "tsc -p .",
     "test": "echo 'browser e2e: pnpm --filter @unspent/e2e ui (needs Surfpool + devdb + Chrome)'",
-    "hero": "tsx hero.ts"
+    "hero": "tsx hero.ts",
+    "a11y": "tsx a11y.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.4",
     "@solana/kit": "^8.4.0",
     "@unspent/db": "workspace:*",
+    "@unspent/program": "workspace:*",
     "@unspent/shared": "workspace:*",
-    "playwright-core": "^1.56.0",
-    "@unspent/program": "workspace:*"
+    "playwright-core": "^1.56.0"
   },
   "devDependencies": {
+    "axe-core": "^4.14.0",
     "tsx": "^4.23.15"
   }
 }

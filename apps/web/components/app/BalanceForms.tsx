@@ -2,6 +2,7 @@
 
 import { address } from "@solana/kit";
 import { type ReactNode, useEffect, useState } from "react";
+import { TableWrap } from "@/components/TableWrap";
 import { browserRpc } from "@/lib/chain/browser";
 import { depositCredits, releaseExpired, setReserveCap, withdrawCredits } from "@/lib/chain/build";
 import type { ProgramState, ReservationRow, UserState, WalletState } from "@/lib/chain/read";
@@ -204,7 +205,7 @@ function Reservations({ owner, program, reservations, now }: Props & { now: numb
       {reservations.length === 0 ? (
         <Empty>Nothing is held right now. Holds appear while your API requests run.</Empty>
       ) : (
-        <div className="table-wrap">
+        <TableWrap label="Holds">
           <table>
             <thead>
               <tr>
@@ -227,7 +228,7 @@ function Reservations({ owner, program, reservations, now }: Props & { now: numb
               ))}
             </tbody>
           </table>
-        </div>
+        </TableWrap>
       )}
       {expired.length > 0 ? (
         <TxButton

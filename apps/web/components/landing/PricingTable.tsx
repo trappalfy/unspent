@@ -1,4 +1,5 @@
 import { CLAUDE_MODELS, creditsPerMillion, type ModelEntry, type PriceTier } from "@unspent/shared";
+import { TableWrap } from "@/components/TableWrap";
 
 // Prices in credits per 1M tokens, straight from models.ts with the markup applied (brief 5.2, 11.5).
 
@@ -19,7 +20,7 @@ export function PricingTable() {
   const rows = CLAUDE_MODELS.filter((m) => m.enabled).flatMap(rowsOf);
   const p = (v: bigint) => creditsPerMillion(v);
   return (
-    <div className="table-wrap">
+    <TableWrap label="Prices">
       <table>
         <caption className="sr-only">Prices in credits per 1M tokens</caption>
         <thead>
@@ -45,6 +46,6 @@ export function PricingTable() {
           ))}
         </tbody>
       </table>
-    </div>
+    </TableWrap>
   );
 }

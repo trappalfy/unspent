@@ -1,0 +1,28 @@
+## Kept for billing
+
+For each request Unspent keeps:
+
+- time, API key, wallet, model and provider;
+- token counts by type, cost, duration and status;
+- the request id, the `reserve` and `settle` transaction signatures and the provider's request id;
+- Claude Code's session and agent ids, so [/app/usage](/app/usage) can group spend by session.
+
+For `Idempotency-Key`, the SHA-256 hashes of the key and of the request body are kept for 24 hours.
+
+## Never stored
+
+Request and response bodies: prompts, system prompts, messages, tool calls, files and images. They pass through to the model and are not stored or logged.
+
+## Public onchain
+
+Every request has two public transactions on Solana. Anyone can see the wallet, the time and the amount of each hold and settlement. Models, token counts and content are not onchain.
+
+## IP addresses
+
+IP addresses are used only for rate limits and are not stored.
+
+## The model provider
+
+Requests are processed by the model provider, Anthropic for Claude models, under its own terms and policies.
+
+The full privacy policy is at [/privacy](/privacy).

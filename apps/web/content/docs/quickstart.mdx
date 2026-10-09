@@ -1,0 +1,71 @@
+You need a Solana wallet (Phantom, Solflare, Backpack or any other Wallet Standard wallet) with USDC or another token you can swap, and a little SOL for network fees.
+
+## 1. Buy credits
+
+Open [/app/buy](/app/buy), connect your wallet and enter an amount. One credit costs 1 USDC. If you pay with another token, it is swapped to USDC through Jupiter in the same transaction.
+
+By default the credits go straight to your API balance. Turn on **Keep in wallet** to receive them as tokens instead and deposit them later on [/app/balance](/app/balance).
+
+## 2. Create an API key
+
+Open [/app/keys](/app/keys) and create a key. It is shown once, so copy it before closing the dialog.
+
+```bash
+export UNSPENT_API_KEY=usp_live_...
+```
+
+## 3. Send a request
+
+```bash
+curl {API_BASE}/v1/messages \
+  -H "x-api-key: $UNSPENT_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "content-type: application/json" \
+  -d '{"model":"claude-sonnet-5-5","max_tokens":512,
+       "messages":[{"role":"user","content":"Hello"}]}'
+```
+
+With the Anthropic SDK:
+
+```python
+import os
+from anthropic import Anthropic
+
+client = Anthropic(base_url="{API_BASE}", api_key=os.environ["UNSPENT_API_KEY"])
+message = client.messages.create(
+    model="claude-sonnet-5-5",
+    max_tokens=512,
+    messages=[{"role": "user", "content": "Hello"}],
+)
+print(message.content[0].text)
+```
+
+With the OpenAI SDK:
+
+```ts
+import OpenAI from "openai";
+
+const client = new OpenAI({ baseURL: "{API_BASE}/v1", apiKey: process.env.UNSPENT_API_KEY });
+const completion = await client.chat.completions.create({
+  model: "claude-sonnet-5-5",
+  max_tokens: 512,
+  messages: [{ role: "user", content: "Hello" }],
+});
+console.log(completion.choices[0].message.content);
+```
+
+Using Claude Code? Two environment variables are enough: see [Claude Code](/docs/claude-code).
+
+## 4. See what it cost
+
+Every request is listed on [/app/usage](/app/usage) with its tokens, its cost and the two Solana transactions that held and settled it. Your balance is on [/app/balance](/app/balance) and at `GET /v1/balance`:
+
+```bash
+curl {API_BASE}/v1/balance -H "x-api-key: $UNSPENT_API_KEY"
+```
+
+```json
+{ "available": "24.98965", "reserved": "0", "balance": "24.98965" }
+```
+
+Next: [Models & pricing](/docs/models) for what requests cost, [Credits & balance](/docs/credits) for withdrawing and selling.
