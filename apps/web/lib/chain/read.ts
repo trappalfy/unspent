@@ -4,6 +4,7 @@
 import {
   type Address,
   address,
+  getAddressDecoder,
   getBase58Decoder,
   getBase64Encoder,
   type Rpc,
@@ -24,8 +25,10 @@ import {
   findProgramDataAddress,
   findUserPda,
   getReservationDecoder,
+  getUserAccountDecoder,
   RESERVATION_DISCRIMINATOR,
   UNSPENT_PROGRAM_ADDRESS,
+  USER_ACCOUNT_DISCRIMINATOR,
 } from "@unspent/program";
 
 export type AppRpc = Rpc<SolanaRpcApi>;
@@ -240,4 +243,66 @@ export async function readReserveBalances(rpc: AppRpc, p: ProgramState) {
     vaultCredits: vault?.exists ? vault.data.amount : 0n,
     treasuryUsdc: treasury?.exists ? treasury.data.amount : 0n,
   };
+}
+
+export type Holder = { owner: Address; wallet: bigint; apiBalance: bigint };
+
+/**
+ * Everyone who still holds credits: token accounts of the credit mint (except the vault) and API balances. For the
+ * admin before closing the program, so it is clear whose money would be left behind.
+ */
+export async function readHolders(rpc: AppRpc, p: ProgramState): Promise<Holder[]> {
+  const [tokens, users] = await Promise.all([
+    rpc
+      .getProgramAccounts(TOKEN_PROGRAM_ADDRESS, {
+        commitment: "confirmed",
+        encoding: "base64",
+        dataSlice: { offset: 32, length: 40 },
+        filters: [
+          { dataSize: 165n },
+          { memcmp: { offset: 0n, bytes: p.creditMint as never, encoding: "base58" } },
+        ],
+      })
+      .send(),
+    rpc
+      .getProgramAccounts(UNSPENT_PROGRAM_ADDRESS, {
+        commitment: "confirmed",
+        encoding: "base64",
+        filters: [
+          {
+            memcmp: {
+              offset: 0n,
+              bytes: b58.decode(USER_ACCOUNT_DISCRIMINATOR) as never,
+              encoding: "base58",
+            },
+          },
+        ],
+      })
+      .send(),
+  ]);
+  const enc = getBase64Encoder();
+  const byOwner = new Map<Address, Holder>();
+  const holder = (owner: Address) => {
+    let h = byOwner.get(owner);
+    if (!h) byOwner.set(owner, (h = { owner, wallet: 0n, apiBalance: 0n }));
+    return h;
+  };
+  for (const { pubkey, account } of tokens) {
+    if (pubkey === p.vault) continue;
+    const d = enc.encode(account.data[0]) as Uint8Array;
+    const amount = new DataView(d.buffer, d.byteOffset).getBigUint64(32, true);
+    if (amount > 0n) holder(getAddressDecoder().decode(d.subarray(0, 32))).wallet += amount;
+  }
+  const dec = getUserAccountDecoder();
+  for (const { account } of users) {
+    const u = dec.decode(enc.encode(account.data[0]));
+    if (u.balance > 0n) holder(u.owner).apiBalance += u.balance;
+  }
+  return [...byOwner.values()].sort((a, b) =>
+    b.wallet + b.apiBalance > a.wallet + a.apiBalance
+      ? 1
+      : b.wallet + b.apiBalance < a.wallet + a.apiBalance
+        ? -1
+        : 0,
+  );
 }

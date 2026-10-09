@@ -3,8 +3,9 @@
 // ops/surfpool-up.sh and ops/rehearse.sh launch with. Covers: hidden for other wallets, pause and resume, a limit
 // raise that waits admin_delay and is applied after it, an immediate lowering, a backup gateway key proposed and
 // cancelled, freezing upgrades, axe and 390 px; with E2E_SHUTDOWN=1 also the irreversible shutdown. E2E_CLOSE=1
-// (with E2E_SHUTDOWN=1) skips the freeze and ends by closing the program for its SOL deposit — refused while credits
-// are in circulation (after tests/e2e/ui.ts), done when none are (owner, 2026-10-10: a test that must give its SOL back).
+// (with E2E_SHUTDOWN=1) skips the freeze and ends by closing the program for its SOL deposit: cleanly when no credits
+// are out, or with funds left behind its own confirmation after tests/e2e/ui.ts (owner, 2026-10-10: a test launch that
+// must give its SOL back, and a test of what happens to money left in a closed program).
 //
 // Prereqs: ops/surfpool-up.sh (or ops/rehearse.sh), `pnpm --filter @unspent/db devdb`, Chrome.
 //   pnpm --filter @unspent/e2e admin
@@ -225,11 +226,30 @@ async function main() {
     const p = await state();
     await page.goto(`${WEB}/app/admin`);
     await page.getByRole("heading", { name: "Close the program" }).waitFor();
+    const v = await axe(page);
+    if (v.length) console.log(`    ${describe(v)}`);
+    ok("close section: axe WCAG 2.1 AA", v.length === 0);
+    await page.screenshot({ path: join(SHOTS, "03-close.png"), fullPage: true });
     if (p.supply > 0n) {
+      // Owner's test: close with funds left, and see what stays where.
+      const before = await readReserveBalances(rpc, p);
       ok(
-        "close refused while credits are in circulation",
+        "closing with credits out: consequences and holders listed",
         (await page.getByText("are still in circulation").count()) === 1 &&
-          (await page.getByRole("button", { name: "Close the program and return its SOL" }).count()) === 0,
+          (await page.getByText("Check that every one is yours").count()) === 1,
+      );
+      await act(
+        "Close the program and leave the funds",
+        async () => (await readProgramCode(rpc)).closed,
+        "LEAVE THE FUNDS",
+      );
+      const after = await readReserveBalances(rpc, p);
+      const mintAfter = await readProgram(rpc);
+      ok(
+        `closed with funds: reserve keeps ${Number(after.reserveUsdc) / 1e6} USDC, vault ${Number(after.vaultCredits) / 1e6} credits, supply ${Number(mintAfter?.supply ?? 0n) / 1e6}`,
+        after.reserveUsdc === before.reserveUsdc &&
+          after.vaultCredits === before.vaultCredits &&
+          mintAfter?.supply === p.supply,
       );
     } else {
       if ((await readReserveBalances(rpc, p)).reserveUsdc > 0n)

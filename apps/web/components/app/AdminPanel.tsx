@@ -29,7 +29,7 @@ import {
 } from "@unspent/program";
 import { type ReactNode, useId, useState } from "react";
 import { browserRpc } from "@/lib/chain/browser";
-import type { PendingRow, ProgramCode, ProgramState } from "@/lib/chain/read";
+import type { Holder, PendingRow, ProgramCode, ProgramState } from "@/lib/chain/read";
 import { prepare } from "@/lib/chain/tx";
 import { explorerAddress } from "@/lib/env";
 import { exactCredits, formatSol, formatUnits, parseUnits } from "@/lib/format";
@@ -41,6 +41,7 @@ type Props = {
   program: ProgramState;
   code: ProgramCode;
   balances: { reserveUsdc: bigint; vaultCredits: bigint; holds: number };
+  holders: Holder[];
   now: number;
 };
 
@@ -159,7 +160,7 @@ function Field({ label, children }: { label: string; children: (id: string) => R
   );
 }
 
-export function AdminPanel({ admin, program: p, code, balances, now }: Props) {
+export function AdminPanel({ admin, program: p, code, balances, holders, now }: Props) {
   const upgradeAuthority = code.authority;
   const signer = createNoopSigner(address(admin));
   const [limitField, setLimitField] = useState<ConfigField>(ConfigField.MaxReservation);
@@ -191,14 +192,15 @@ export function AdminPanel({ admin, program: p, code, balances, now }: Props) {
     [PauseTarget.Gateway, "API requests", p.gatewayPaused],
   ];
   const frozen = upgradeAuthority === null;
-  // Closing is allowed only when nobody's money is left with the program (rule 0.6): no credits in circulation,
-  // an empty reserve and vault, no open holds.
+  // What closing would leave with the program for good: credits in circulation, the reserve and vault, open holds.
+  // Owner, 2026-10-10: closing with funds left is allowed on purpose (a test of exactly that), behind its own
+  // confirmation, with the holders listed.
   const blockers = [
-    p.supply > 0n && `${exactCredits(p.supply)} are still in circulation: their holders redeem them first.`,
-    balances.reserveUsdc > 0n &&
-      `The reserve still holds ${formatUnits(balances.reserveUsdc, 6)} USDC: sweep the surplus first.`,
-    balances.vaultCredits > 0n && `The vault still holds ${exactCredits(balances.vaultCredits)}.`,
-    balances.holds > 0 && `${balances.holds} holds are still open: they settle or expire first.`,
+    p.supply > 0n && `${exactCredits(p.supply)} are still in circulation.`,
+    balances.reserveUsdc > 0n && `The reserve still holds ${formatUnits(balances.reserveUsdc, 6)} USDC.`,
+    balances.vaultCredits > 0n &&
+      `The vault still holds ${exactCredits(balances.vaultCredits)} of API balances.`,
+    balances.holds > 0 && `${balances.holds} holds are still open.`,
   ].filter((b): b is string => !!b);
 
   if (code.closed)
@@ -515,11 +517,9 @@ export function AdminPanel({ admin, program: p, code, balances, now }: Props) {
         <Panel title="Close the program">
           <p className="text-sm text-mute">
             Deletes the program for good and returns its SOL deposit, {formatSol(code.rentLamports)}, to this
-            wallet. Only possible when nobody&apos;s money is left with the program.
+            wallet.
           </p>
-          {blockers.length ? (
-            blockers.map((b) => <Notice key={b}>{b}</Notice>)
-          ) : (
+          {blockers.length === 0 ? (
             <Action
               {...act}
               id="close"
@@ -529,6 +529,45 @@ export function AdminPanel({ admin, program: p, code, balances, now }: Props) {
                 await getCloseProgramInstruction({ authority: signer, recipient: address(admin) }),
               ]}
             />
+          ) : (
+            <>
+              {blockers.map((b) => (
+                <Notice key={b}>{b}</Notice>
+              ))}
+              <p className="text-sm">
+                To close cleanly, holders redeem first and the surplus is swept. Closing now leaves this money
+                with the program for good:
+              </p>
+              <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-mute">
+                <li>
+                  USDC in the reserve stays in the reserve account. Nobody can move it again, including you.
+                </li>
+                <li>
+                  Credits in wallets stay tokens: they can still be sent or traded, never redeemed or spent.
+                </li>
+                <li>Credits on API balances stay locked in the vault.</li>
+              </ul>
+              {holders.length > 0 && (
+                <>
+                  <p className="text-sm">Wallets holding credits. Check that every one is yours:</p>
+                  <Preview
+                    rows={holders.map((h) => [
+                      `${h.owner.slice(0, 4)}…${h.owner.slice(-4)}`,
+                      `wallet ${exactCredits(h.wallet)} · API balance ${exactCredits(h.apiBalance)}`,
+                    ])}
+                  />
+                </>
+              )}
+              <Action
+                {...act}
+                id="close-with-funds"
+                label="Close the program and leave the funds"
+                confirm="LEAVE THE FUNDS"
+                build={async () => [
+                  await getCloseProgramInstruction({ authority: signer, recipient: address(admin) }),
+                ]}
+              />
+            </>
           )}
         </Panel>
       )}
