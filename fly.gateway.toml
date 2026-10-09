@@ -1,0 +1,40 @@
+# API gateway on Fly.io (brief 8, Q11). Exactly one machine: rate limits and the settle queue are per process.
+#   fly apps create unspent-gateway
+#   fly secrets set -a unspent-gateway DATABASE_URL=… RPC_URL=… GATEWAY_KEYPAIR='[…]' ANTHROPIC_API_KEYS=… \
+#     ALERT_WEBHOOK_URL=… NEXT_PUBLIC_SITE_URL=https://…
+#   fly deploy -c fly.gateway.toml && fly scale count 1 -a unspent-gateway
+# PROVIDER_MODE=live sends paid requests to the provider: deploy only with the owner's go (brief rule 0.3).
+app = "unspent-gateway"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NEXT_PUBLIC_SOLANA_NETWORK = "mainnet"
+  PROVIDER_MODE = "live"
+  GATEWAY_PORT = "8787"
+  MARKUP_BPS = "1500"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = false
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 400
+    hard_limit = 500
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/health"
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "30s"
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "1gb"

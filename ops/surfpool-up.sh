@@ -3,6 +3,7 @@
 # launch.ts for localnet. Never touches a public cluster; Surfpool only reads mainnet accounts it doesn't have yet.
 #
 #   ops/surfpool-up.sh          # start + deploy + launch
+#   NO_LAUNCH=1 ops/surfpool-up.sh   # start + deploy only (ops/rehearse.sh launches with multisigs itself)
 #   ops/surfpool-up.sh stop
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -56,7 +57,7 @@ solana program deploy "$V2" --skip-feature-verify --program-id keys/unspent-prog
   --url $U 2>&1 | grep -E "Program Id|Error"
 rm -f keys/localnet-credit-mint-keypair.json
 cd ops
-NETWORK=localnet \
+[ "${NO_LAUNCH:-}" = "1" ] || NETWORK=localnet \
   ADMIN="$(solana-keygen pubkey ../keys/localnet-admin-keypair.json)" \
   GATEWAY="$(solana-keygen pubkey ../keys/localnet-gateway-keypair.json)" \
   TREASURY_OWNER="$(solana-keygen pubkey ../keys/localnet-treasury-owner-keypair.json)" \

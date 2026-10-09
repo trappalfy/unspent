@@ -15,5 +15,5 @@ test-ledger/
 # keypairs never committed
 *-keypair.json
 /keys/
-ops/deployments/localnet.json
+ops/deployments/localnet*.json
 .data/

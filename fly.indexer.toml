@@ -1,0 +1,19 @@
+# Indexer on Fly.io (brief 9.1, Q11): program logs → chain_events. One machine, no public port.
+#   fly apps create unspent-indexer
+#   fly secrets set -a unspent-indexer DATABASE_URL=… RPC_URL=… RPC_WS_URL=…
+#   fly deploy -c fly.indexer.toml && fly scale count 1 -a unspent-indexer
+app = "unspent-indexer"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NEXT_PUBLIC_SOLANA_NETWORK = "mainnet"
+
+[processes]
+  app = "pnpm --filter @unspent/indexer start"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

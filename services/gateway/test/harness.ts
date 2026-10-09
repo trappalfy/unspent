@@ -2,7 +2,7 @@
 // No paid provider calls and no public cluster (brief rule 0.3).
 
 import { serve } from "@hono/node-server";
-import { apiKeys, openPglite, wallets } from "@unspent/db";
+import { apiKeys, openTestDb, wallets } from "@unspent/db";
 import { generateApiKey, sha256 } from "@unspent/shared";
 import { createApp } from "../src/app";
 import { loadConfig } from "../src/config";
@@ -47,7 +47,7 @@ export async function startHarness(
   opts: { credits?: bigint; env?: Record<string, string>; limiter?: MemoryRateLimiter } = {},
 ): Promise<Harness> {
   const mock = await startMockAnthropic();
-  const { db, close: closeDb } = await openPglite();
+  const { db, close: closeDb } = await openTestDb();
   const chain = new FakeChain();
   const logs: string[] = [];
   const log = createLogger({ sink: (l) => logs.push(l) });

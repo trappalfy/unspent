@@ -1,7 +1,7 @@
 // Keys and usage data access against PGlite: scoping to the signed-in wallet, validation, show-once secrets,
 // spend aggregation and CSV export.
 
-import { apiKeys, type Db, openPglite, requests } from "@unspent/db";
+import { apiKeys, type Db, openTestDb, requests } from "@unspent/db";
 import { isApiKeyFormat, sha256 } from "@unspent/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createKey, listKeys, MAX_ACTIVE_KEYS, parseKeyInput, revokeKey } from "../lib/keys";
@@ -14,7 +14,7 @@ const A = "WalletA111111111111111111111111111111111111";
 const B = "WalletB111111111111111111111111111111111111";
 
 beforeAll(async () => {
-  ({ db, close } = await openPglite());
+  ({ db, close } = await openTestDb());
 });
 afterAll(() => close());
 

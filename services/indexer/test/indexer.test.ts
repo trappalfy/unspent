@@ -2,7 +2,7 @@
 // null getTransaction, concurrent polls, the logs subscription, and the read queries.
 
 import { type Address, address } from "@solana/kit";
-import { asc, chainEvents, type Db, eq, indexerCursor, openPglite } from "@unspent/db";
+import { asc, chainEvents, type Db, eq, indexerCursor, openTestDb } from "@unspent/db";
 import {
   ConfigField,
   getCreditsBoughtEventEncoder,
@@ -31,7 +31,7 @@ let close: () => Promise<void>;
 let logs: string[];
 
 beforeEach(async () => {
-  ({ db, close } = await openPglite());
+  ({ db, close } = await openTestDb());
   logs = [];
 });
 afterEach(async () => {

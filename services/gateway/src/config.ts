@@ -46,7 +46,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): GatewayConfig 
       .filter(Boolean),
     databaseUrl: env.DATABASE_URL ?? "",
     rpcUrl: env.RPC_URL ?? "http://127.0.0.1:8899",
-    gatewayKeypairPath: env.GATEWAY_KEYPAIR_PATH ?? "",
+    // GATEWAY_KEYPAIR holds the key itself (JSON array, as a secret); GATEWAY_KEYPAIR_PATH points to a file.
+    gatewayKeypairPath: env.GATEWAY_KEYPAIR || env.GATEWAY_KEYPAIR_PATH || "",
     siteUrl: env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
     reserveTimeoutMs: Number(env.RESERVE_TIMEOUT_MS ?? 20_000),
     reconcileIntervalMs: Number(env.RECONCILE_INTERVAL_MS ?? 120_000),

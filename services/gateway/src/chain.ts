@@ -107,8 +107,10 @@ export class SolanaChain implements Chain {
     this.rpc = createSolanaRpc(rpcUrl);
   }
 
-  static async create(rpcUrl: string, keypairPath: string, maxPriorityFee: bigint): Promise<SolanaChain> {
-    const bytes = Uint8Array.from(JSON.parse(readFileSync(keypairPath, "utf8")));
+  /** `keypair`: a path to a Solana CLI keypair file, or its JSON content (a secret env var on Fly.io). */
+  static async create(rpcUrl: string, keypair: string, maxPriorityFee: bigint): Promise<SolanaChain> {
+    const json = keypair.trim().startsWith("[") ? keypair : readFileSync(keypair, "utf8");
+    const bytes = Uint8Array.from(JSON.parse(json));
     return new SolanaChain(rpcUrl, await createKeyPairSignerFromBytes(bytes), maxPriorityFee);
   }
 

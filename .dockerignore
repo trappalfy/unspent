@@ -1,0 +1,13 @@
+**/node_modules
+**/.next
+**/*.tsbuildinfo
+.git
+.data
+target
+keys
+brand
+programs
+.env
+.env.*
+!.env.example
+apps/web/public

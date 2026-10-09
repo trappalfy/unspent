@@ -103,10 +103,9 @@ export class Reconciler {
         and(
           inArray(requests.status, ["reserved", "dispatched"]),
           or(
-            lt(
-              sql`coalesce(${requests.lastProgressAt}, ${requests.dispatchedAt}, ${requests.createdAt})`,
-              staleBefore,
-            ),
+            // A Date next to raw SQL skips drizzle's column mapping and reaches postgres-js as Date.toString(),
+            // which Postgres can't parse: pass ISO time with an explicit type.
+            sql`coalesce(${requests.lastProgressAt}, ${requests.dispatchedAt}, ${requests.createdAt}) < ${staleBefore.toISOString()}::timestamptz`,
             and(isNotNull(requests.dispatchedAt), lt(requests.dispatchedAt, tooOld)),
           ),
         ),
