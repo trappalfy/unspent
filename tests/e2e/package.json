@@ -1,0 +1,21 @@
+{
+  "name": "@unspent/e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ui": "tsx ui.ts",
+    "typecheck": "tsc -p .",
+    "test": "echo 'browser e2e: pnpm --filter @unspent/e2e ui (needs Surfpool + devdb + Chrome)'"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.4",
+    "@solana/kit": "^8.4.0",
+    "@unspent/db": "workspace:*",
+    "@unspent/shared": "workspace:*",
+    "playwright-core": "^1.56.0",
+    "@unspent/program": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
+  }
+}

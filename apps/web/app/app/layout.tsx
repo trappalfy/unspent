@@ -1,19 +1,23 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { AppNav } from "@/components/app/AppNav";
+import { Notice } from "@/components/app/ui";
 import { AccountBar } from "@/components/wallet/AccountBar";
 import { SignIn } from "@/components/wallet/SignIn";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
 import { publicEnv } from "@/lib/env";
+import { getProgram } from "@/lib/server/program";
 import { getSession } from "@/lib/session";
 
-const LINKS = [
+export const dynamic = "force-dynamic";
+
+const LINKS: [string, string][] = [
   ["/app", "Overview"],
   ["/app/buy", "Buy"],
   ["/app/balance", "Balance"],
   ["/app/keys", "Keys"],
   ["/app/usage", "Usage"],
   ["/app/sell", "Sell"],
-] as const;
+];
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   if (publicEnv.prelaunch) {
@@ -28,23 +32,28 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       </section>
     );
   }
-  const session = await getSession();
+  const [session, program] = await Promise.all([getSession(), getProgram()]);
+  const links = program?.shutDown ? [...LINKS, ["/app/redeem", "Redeem"] as [string, string]] : LINKS;
   return (
     <WalletProvider initialAddress={session?.address ?? null}>
       <div className="mx-auto max-w-[1280px] px-4 md:px-8">
-        {session ? (
+        {!program ? (
+          <section className="py-16">
+            <h1 className="text-xl">Not live yet</h1>
+            <p className="mt-4 text-sm text-mute">Unspent isn&apos;t running on this network yet.</p>
+          </section>
+        ) : session ? (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line py-3">
-              <nav className="flex flex-wrap gap-4 text-sm">
-                {LINKS.map(([href, label]) => (
-                  <Link key={href} href={href}>
-                    {label}
-                  </Link>
-                ))}
-              </nav>
+            <div className="flex flex-col gap-3 border-b border-line py-3 md:flex-row md:items-center md:justify-between">
+              <AppNav links={links} />
               <AccountBar />
             </div>
-            {children}
+            {program.shutDown && (
+              <div className="mt-4 border border-fg p-3">
+                <Notice>Unspent is shut down. Withdraw your balance and redeem credits for USDC.</Notice>
+              </div>
+            )}
+            <div className="pb-8">{children}</div>
           </>
         ) : (
           <SignIn />

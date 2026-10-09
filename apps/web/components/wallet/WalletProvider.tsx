@@ -1,10 +1,15 @@
 "use client";
 
+import { getBase58Decoder } from "@solana/kit";
 import {
+  SolanaSignAndSendTransaction,
+  type SolanaSignAndSendTransactionFeature,
   SolanaSignIn,
   type SolanaSignInFeature,
   SolanaSignMessage,
   type SolanaSignMessageFeature,
+  SolanaSignTransaction,
+  type SolanaSignTransactionFeature,
 } from "@solana/wallet-standard-features";
 import { createSignInMessageText } from "@solana/wallet-standard-util";
 import { getWallets } from "@wallet-standard/app";
@@ -19,6 +24,8 @@ import {
 } from "@wallet-standard/features";
 import { useRouter } from "next/navigation";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import type { SignResult } from "@/lib/chain/tx";
+import { chain } from "@/lib/env";
 import { type SiwsInput, type SiwsProof, toBase64 } from "@/lib/siws";
 
 // Wallet Standard discovery (Phantom, Solflare, Backpack and any compliant wallet) + Sign-In With Solana.
@@ -35,6 +42,8 @@ type WalletState = {
   error: string | null;
   signIn: (wallet: Wallet) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Signs a serialized transaction with the signed-in account, reconnecting the wallet if needed. */
+  signTransaction: (bytes: Uint8Array) => Promise<SignResult>;
 };
 
 const Ctx = createContext<WalletState | null>(null);
@@ -202,9 +211,48 @@ export function WalletProvider({
     [router],
   );
 
+  const connected = useCallback(async (): Promise<{ w: Wallet; a: WalletAccount }> => {
+    if (wallet && account && account.address === sessionAddress) return { w: wallet, a: account };
+    const name = remembered();
+    const w = wallet ?? (name ? wallets.find((x) => x.name === name) : undefined);
+    if (!w) throw new Error("Connect your wallet again to sign.");
+    const { accounts } = await (w.features as StandardConnectFeature)[StandardConnect].connect();
+    const a = accounts.find((x) => x.address === sessionAddress);
+    if (!a) throw new Error(`Switch your wallet to ${shortAddress(sessionAddress ?? "")} or sign in again.`);
+    setWallet(w);
+    setAccount(a);
+    return { w, a };
+  }, [wallet, account, wallets, sessionAddress]);
+
+  const signTransaction = useCallback(
+    async (bytes: Uint8Array): Promise<SignResult> => {
+      const { w, a } = await connected();
+      if (SolanaSignTransaction in w.features) {
+        const [out] = await (w.features as SolanaSignTransactionFeature)[
+          SolanaSignTransaction
+        ].signTransaction({
+          account: a,
+          transaction: bytes,
+          chain,
+        });
+        if (!out) throw new Error("The wallet returned no signature.");
+        return { signed: out.signedTransaction };
+      }
+      if (SolanaSignAndSendTransaction in w.features) {
+        const [out] = await (w.features as SolanaSignAndSendTransactionFeature)[
+          SolanaSignAndSendTransaction
+        ].signAndSendTransaction({ account: a, transaction: bytes, chain });
+        if (!out) throw new Error("The wallet returned no signature.");
+        return { signature: getBase58Decoder().decode(out.signature) };
+      }
+      throw new Error("This wallet can't sign transactions.");
+    },
+    [connected],
+  );
+
   const value = useMemo(
-    () => ({ wallets, wallet, account, sessionAddress, busy, error, signIn, signOut }),
-    [wallets, wallet, account, sessionAddress, busy, error, signIn, signOut],
+    () => ({ wallets, wallet, account, sessionAddress, busy, error, signIn, signOut, signTransaction }),
+    [wallets, wallet, account, sessionAddress, busy, error, signIn, signOut, signTransaction],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

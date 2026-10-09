@@ -6,4 +6,5 @@ packages:
   - ops
 
 allowBuilds:
+  '@embedded-postgres/darwin-arm64': true
   esbuild: true

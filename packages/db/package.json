@@ -10,7 +10,8 @@
     "typecheck": "tsc -p .",
     "test": "echo 'no tests yet'",
     "generate": "drizzle-kit generate",
-    "migrate": "drizzle-kit migrate"
+    "migrate": "drizzle-kit migrate",
+    "devdb": "tsx scripts/devdb.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
@@ -18,6 +19,8 @@
     "postgres": "^3.4.9"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.11"
+    "drizzle-kit": "^0.31.11",
+    "embedded-postgres": "18.4.0-beta.17",
+    "tsx": "^4.23.15"
   }
 }

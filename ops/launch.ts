@@ -28,6 +28,9 @@ import {
 } from "./lib";
 
 const network = env("NETWORK", "localnet");
+const skipMetadata = process.env.SKIP_METADATA === "1";
+if (skipMetadata && network !== "localnet")
+  throw new Error("SKIP_METADATA is for an offline local fork only");
 if (network !== "localnet" && network !== "mainnet") throw new Error(`NETWORK must be localnet or mainnet`);
 if (network === "mainnet" && process.env.CONFIRM_MAINNET !== "yes") {
   throw new Error(
@@ -68,15 +71,20 @@ if (!mintInfo.value) {
       mintAuthority: deployer.address,
       freezeAuthority: null,
     }),
-    await createMetadataV3Instruction({
-      mint: mint.address,
-      mintAuthority: deployer,
-      payer: deployer,
-      updateAuthority: admin,
-      name: env("TOKEN_NAME", "Unspent Credit"),
-      symbol: env("TOKEN_SYMBOL"),
-      uri: env("TOKEN_URI"),
-    }),
+    // An offline local fork has no Metaplex program; metadata is skipped there only.
+    ...(skipMetadata
+      ? []
+      : [
+          await createMetadataV3Instruction({
+            mint: mint.address,
+            mintAuthority: deployer,
+            payer: deployer,
+            updateAuthority: admin,
+            name: env("TOKEN_NAME", "Unspent Credit"),
+            symbol: env("TOKEN_SYMBOL"),
+            uri: env("TOKEN_URI"),
+          }),
+        ]),
     getSetAuthorityInstruction({
       owned: mint.address,
       owner: deployer,

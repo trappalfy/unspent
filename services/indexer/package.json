@@ -2,17 +2,23 @@
   "name": "@unspent/indexer",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/queries.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "typecheck": "tsc -p .",
-    "test": "echo 'no tests yet'"
+    "test": "vitest run"
   },
   "dependencies": {
+    "@solana/kit": "^8.4.0",
     "@unspent/db": "workspace:*",
+    "@unspent/program": "workspace:*",
     "@unspent/shared": "workspace:*"
   },
   "devDependencies": {
+    "@solana-program/token": "^0.17.0",
     "tsx": "^4.23.15"
   }
 }
