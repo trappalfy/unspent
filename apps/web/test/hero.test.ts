@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import raw from "../components/ascii-hero/hero-settings.json";
 import { fbm, hash2, vnoise } from "../components/ascii-hero/noise";
+import { heroSettings } from "../components/ascii-hero/settings";
 import { BLUR_FS, CELL_FS, CELL_VS, COMP_FS, DOWN_FS, FS_VS } from "../components/ascii-hero/shaders";
 
 const ROOT = new URL("../../../", import.meta.url).pathname;
@@ -19,6 +20,9 @@ function template(name: string): string {
 describe("AsciiHero matches the prototype", () => {
   it("uses the approved settings unchanged", () => {
     expect(raw).toEqual(JSON.parse(readFileSync(`${ROOT}brand/hero/hero-settings.json`, "utf8")));
+    // The one owner override on top of them: no reaction to the mouse.
+    expect({ ...heroSettings, cursorOn: raw.cursorOn }).toEqual(raw);
+    expect(heroSettings.cursorOn).toBe(false);
   });
 
   it("has the five shaders verbatim", () => {

@@ -3,4 +3,5 @@
 import raw from "./hero-settings.json";
 
 export type HeroSettings = typeof raw;
-export const heroSettings: Readonly<HeroSettings> = Object.freeze({ ...raw });
+// Owner, 2026-10-09: the art no longer reacts to the mouse. Everything else stays as approved.
+export const heroSettings: Readonly<HeroSettings> = Object.freeze({ ...raw, cursorOn: false });
