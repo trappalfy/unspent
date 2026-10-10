@@ -1,8 +1,5 @@
 # API gateway on Fly.io (brief 8, Q11). Exactly one machine: rate limits and the settle queue are per process.
-#   fly apps create unspent-gateway
-#   fly secrets set -a unspent-gateway DATABASE_URL=… RPC_URL=… GATEWAY_KEYPAIR='[…]' ANTHROPIC_API_KEYS=… \
-#     ALERT_WEBHOOK_URL=… NEXT_PUBLIC_SITE_URL=https://…
-#   fly deploy -c fly.gateway.toml && fly scale count 1 -a unspent-gateway
+# Created, given its secrets and deployed by ops/fly-up.sh (together with the indexer).
 # PROVIDER_MODE=live sends paid requests to the provider: deploy only with the owner's go (brief rule 0.3).
 app = "unspent-gateway"
 primary_region = "iad"

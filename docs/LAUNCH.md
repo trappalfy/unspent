@@ -56,13 +56,9 @@
 
 1. **Neon:** проект и база `unspent`. Шлюзу и индексатору — прямой URL (`DATABASE_URL`), сайту на Vercel — pooled URL. Миграции применяют шлюз и индексатор при старте, под advisory lock.
 2. **Helius:** ключ; `RPC_URL=https://mainnet.helius-rpc.com/?api-key=…`, `RPC_WS_URL=wss://mainnet.helius-rpc.com/?api-key=…`.
-3. **Fly.io:** приложения `unspent-gateway` и `unspent-indexer` из корня репозитория, конфиги `fly.gateway.toml` и `fly.indexer.toml`, один образ (`Dockerfile`). Секреты:
+3. **Fly.io:** приложения `unspent-gateway` и `unspent-indexer` из корня репозитория, конфиги `fly.gateway.toml` и `fly.indexer.toml`, один образ (`Dockerfile`). Всё делает одна команда: создаёт приложения, передаёт секреты из `.env.mainnet` и `keys/` (через stdin, не в командной строке), адрес сайта и хост API из `.env.vercel`, деплоит и добавляет сертификат для хоста API:
    ```bash
-   fly apps create unspent-gateway && fly apps create unspent-indexer
-   fly secrets set -a unspent-indexer DATABASE_URL=… RPC_URL=… RPC_WS_URL=…
-   fly secrets set -a unspent-gateway DATABASE_URL=… RPC_URL=… GATEWAY_KEYPAIR="$(cat keys/mainnet-gateway-keypair.json)" \
-     ANTHROPIC_API_KEYS=… ALERT_WEBHOOK_URL=… NEXT_PUBLIC_SITE_URL=https://<домен>
-   fly certs add <хост API> -a unspent-gateway   # затем CNAME у регистратора
+   ops/fly-up.sh      # затем CNAME api → unspent-gateway.fly.dev у регистратора
    ```
    Шлюз — ровно одна машина: лимиты частоты и очередь расчётов живут в процессе. Образ при сборке скачивает базу «IP → страна» DB-IP для геоблока; раз в месяц образ стоит пересобирать (`fly deploy`), чтобы база была свежей.
 4. **Vercel:** проект с Root Directory `apps/web`, переменная `ENABLE_EXPERIMENTAL_COREPACK=1` (pnpm 12 из `packageManager`). Переменные окружения:
@@ -127,8 +123,8 @@ export NETWORK=mainnet RPC_URL=https://mainnet.helius-rpc.com/?api-key=… WS_UR
    - метаданные Metaplex;
    - резерв и хранилище.
 
-4. **[GO] Шлюз и индексатор.** `fly deploy -c fly.indexer.toml`, затем `fly deploy -c fly.gateway.toml`.
-   - Проверить `https://<хост API>/health` и `/v1/models`.
+4. **[GO] Шлюз и индексатор.** `ops/fly-up.sh` (повторный запуск после `LAUNCH=1 vercel-env` переводит шлюз на настоящий домен).
+   - `LIVE_URL=https://<сайт> pnpm --filter @unspent/e2e live`: сайт, вход, `/health` и `/v1/models` шлюза.
    - Первый живой запрос с кредитами владельца, в бюджете до $5. Сверить его на `/app/usage` и в эксплорере.
    - Сразу предложить запасной ключ шлюза: `/app/admin` → Gateway key → Propose backup key. Через 48 ч там же появится Apply.
 
