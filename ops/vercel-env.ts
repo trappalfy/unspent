@@ -24,7 +24,7 @@ const owner = parse(resolve(ROOT, ".env.mainnet"));
 const out = resolve(ROOT, ".env.vercel");
 const prev = parse(out);
 const launch = process.env.LAUNCH === "1";
-const domain = launch ? owner.DOMAIN : owner.TEST_DOMAIN;
+const domain = launch ? owner.DOMAIN : (process.env.TEST_DOMAIN ?? owner.TEST_DOMAIN);
 const need = (k: string, v: string | undefined) => {
   if (!v) throw new Error(`Fill ${k} in .env.mainnet first`);
   return v;
@@ -34,22 +34,30 @@ need(launch ? "DOMAIN" : "TEST_DOMAIN", domain);
 const vars: Record<string, string> = {
   ENABLE_EXPERIMENTAL_COREPACK: "1",
   NEXT_PUBLIC_SOLANA_NETWORK: "mainnet",
-  NEXT_PUBLIC_SITE_URL: `https://${domain}`,
+  // Vercel serves www and redirects the bare domain to it; the API lives at api.<domain> (Fly).
+  NEXT_PUBLIC_SITE_URL: `https://www.${domain}`,
   NEXT_PUBLIC_API_HOST: `api.${domain}`,
   NEXT_PUBLIC_X_URL: owner.X_URL ?? "",
   NEXT_PUBLIC_PRELAUNCH: "false",
   NEXT_PUBLIC_PROJECT_TOKEN_CA: "",
   SESSION_SECRET: prev.SESSION_SECRET || randomBytes(32).toString("base64"),
-  DATABASE_URL: need("DATABASE_URL_POOLED", owner.DATABASE_URL_POOLED),
+  // Only API keys and usage need it; the rest of the site runs without.
+  DATABASE_URL: owner.DATABASE_URL_POOLED ?? "",
   RPC_URL: `https://mainnet.helius-rpc.com/?api-key=${need("HELIUS_API_KEY", owner.HELIUS_API_KEY)}`,
   JUPITER_API_KEY: owner.JUPITER_API_KEY ?? "",
   TOKEN_SYMBOL: launch ? need("TOKEN_SYMBOL", owner.TOKEN_SYMBOL) : "TST",
 };
 writeFileSync(
   out,
+  // Empty values are left out: Vercel won't save a variable without a value.
   `${Object.entries(vars)
+    .filter(([, v]) => v)
     .map(([k, v]) => `${k}=${v}`)
     .join("\n")}\n`,
   { mode: 0o600 },
 );
-console.log(`wrote .env.vercel (${Object.keys(vars).length} variables) for https://${domain}`);
+const empty = Object.entries(vars)
+  .filter(([k, v]) => !v && k !== "NEXT_PUBLIC_PROJECT_TOKEN_CA")
+  .map(([k]) => k);
+console.log(`wrote .env.vercel (${Object.keys(vars).length} variables) for https://www.${domain}`);
+if (empty.length) console.log(`still empty: ${empty.join(", ")}`);
