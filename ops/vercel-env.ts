@@ -1,9 +1,9 @@
 // Builds .env.vercel (gitignored) from the owner's .env.mainnet: every variable the site needs on Vercel, ready to
 // paste into Project → Settings → Environment Variables (it accepts a whole .env). Generated secrets
-// (SESSION_SECRET, SITE_ACCESS_KEY) are kept from an existing .env.vercel, so re-running doesn't log anyone out.
+// (SESSION_SECRET) are kept from an existing .env.vercel, so re-running doesn't log anyone out.
 //
-//   pnpm --filter @unspent/ops vercel-env          # test site on TEST_DOMAIN behind SITE_ACCESS_KEY, "Test Credit"
-//   LAUNCH=1 pnpm --filter @unspent/ops vercel-env # the open site on DOMAIN, no access key
+//   pnpm --filter @unspent/ops vercel-env          # the site on TEST_DOMAIN while the token is "Test Credit"
+//   LAUNCH=1 pnpm --filter @unspent/ops vercel-env # the site on DOMAIN
 
 import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -44,7 +44,6 @@ const vars: Record<string, string> = {
   RPC_URL: `https://mainnet.helius-rpc.com/?api-key=${need("HELIUS_API_KEY", owner.HELIUS_API_KEY)}`,
   JUPITER_API_KEY: owner.JUPITER_API_KEY ?? "",
   TOKEN_SYMBOL: launch ? need("TOKEN_SYMBOL", owner.TOKEN_SYMBOL) : "TST",
-  SITE_ACCESS_KEY: launch ? "" : prev.SITE_ACCESS_KEY || randomBytes(18).toString("base64url"),
 };
 writeFileSync(
   out,
@@ -54,4 +53,3 @@ writeFileSync(
   { mode: 0o600 },
 );
 console.log(`wrote .env.vercel (${Object.keys(vars).length} variables) for https://${domain}`);
-if (!launch) console.log(`test site link: https://${domain}/?access=<SITE_ACCESS_KEY from .env.vercel>`);
