@@ -294,8 +294,8 @@ export async function readHolders(rpc: AppRpc, p: ProgramState): Promise<Holder[
   const enc = getBase64Encoder();
   const byOwner = new Map<Address, Holder>();
   const holder = (owner: Address) => {
-    let h = byOwner.get(owner);
-    if (!h) byOwner.set(owner, (h = { owner, wallet: 0n, apiBalance: 0n }));
+    const h = byOwner.get(owner) ?? { owner, wallet: 0n, apiBalance: 0n };
+    byOwner.set(owner, h);
     return h;
   };
   for (const { pubkey, account } of tokens) {

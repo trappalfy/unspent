@@ -422,7 +422,16 @@ export function AdminPanel({ admin, program: p, code, balances, holders, metadat
             rows={[
               ["Name", metadata.name || "none"],
               ["Symbol", metadata.symbol || "none"],
-              ["Metadata URI", metadata.uri ? <span className="break-all">{metadata.uri}</span> : "none"],
+              [
+                "Metadata URI",
+                metadata.uri ? (
+                  <span key="uri" className="break-all">
+                    {metadata.uri}
+                  </span>
+                ) : (
+                  "none"
+                ),
+              ],
             ]}
           />
           {metadata.updateAuthority !== admin ? (
