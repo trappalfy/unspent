@@ -39,6 +39,8 @@ type RawUsage = {
     ephemeral_1h_input_tokens?: number | null;
   } | null;
   server_tool_use?: Record<string, number | null | undefined> | null;
+  iterations?: RawUsage[] | null;
+  type?: string;
   [k: string]: unknown;
 };
 
@@ -53,6 +55,7 @@ const KNOWN_USAGE = new Set([
   "service_tier",
   "inference_geo",
   "output_tokens_details",
+  "iterations",
 ]);
 const KNOWN_SERVER_TOOLS = new Set(["web_search_requests", "web_fetch_requests"]);
 
@@ -71,9 +74,25 @@ export class UsageMeter {
   errorEvent: string | null = null;
   providerRequestId: string | null = null;
   unknownFields = new Set<string>();
+  /** Tokens of non-message iterations, which the top-level counts leave out. */
+  private extra = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
 
   private apply(u: RawUsage | undefined | null) {
     if (!u) return;
+    if (Array.isArray(u.iterations)) {
+      // A client that enables the compaction beta gets `iterations` on every response. Its message entries are what the
+      // top-level counts already sum; any other entry (a compaction, which the filter refuses) is billed on top.
+      const n = (v: unknown) => (typeof v === "number" ? v : 0);
+      this.extra = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
+      for (const it of u.iterations) {
+        if (it?.type === "message") continue;
+        this.unknownFields.add(`iterations.${String(it?.type)}`);
+        this.extra.input += n(it?.input_tokens);
+        this.extra.output += n(it?.output_tokens);
+        this.extra.cacheRead += n(it?.cache_read_input_tokens);
+        this.extra.cacheWrite += n(it?.cache_creation_input_tokens);
+      }
+    }
     if (typeof u.input_tokens === "number") this.input = u.input_tokens;
     if (typeof u.output_tokens === "number") this.output = u.output_tokens;
     if (typeof u.cache_read_input_tokens === "number") this.cacheRead = u.cache_read_input_tokens;
@@ -151,10 +170,10 @@ export class UsageMeter {
     return {
       estimated,
       usage: {
-        inputTokens: this.input,
-        outputTokens: output,
-        cacheReadInputTokens: this.cacheRead,
-        cacheCreationInputTokens: Math.max(this.cacheWrite, known),
+        inputTokens: this.input + this.extra.input,
+        outputTokens: output + this.extra.output,
+        cacheReadInputTokens: this.cacheRead + this.extra.cacheRead,
+        cacheCreationInputTokens: Math.max(this.cacheWrite, known) + this.extra.cacheWrite,
         cacheCreation5mInputTokens: this.cacheWrite5m,
         cacheCreation1hInputTokens: this.cacheWrite1h,
         webSearchRequests: this.webSearch,

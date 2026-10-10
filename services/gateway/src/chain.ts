@@ -6,15 +6,19 @@ import {
   type Address,
   address,
   appendTransactionMessageInstructions,
+  createDefaultRpcTransport,
   createKeyPairSignerFromBytes,
-  createSolanaRpc,
+  createSolanaRpcFromTransport,
   createTransactionMessage,
   getBase64EncodedWireTransaction,
   getSignatureFromTransaction,
   type Instruction,
+  isSolanaError,
   type KeyPairSigner,
   pipe,
+  type RpcTransport,
   type Signature,
+  SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR,
   setTransactionMessageFeePayerSigner,
   setTransactionMessageLifetimeUsingBlockhash,
   signTransactionMessageWithSigners,
@@ -94,6 +98,27 @@ export function customErrorCode(err: unknown): number | null {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Retries rate limits (429), RPC 5xx and network errors with backoff. The RPC plan's request rate is shared with the
+ * indexer and the site, and one refused status poll must not fail a request whose hold already landed.
+ */
+export function retryingTransport(inner: RpcTransport, delaysMs = [250, 500, 1_000, 2_000]): RpcTransport {
+  return (async (config: Parameters<RpcTransport>[0]) => {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await inner(config);
+      } catch (e) {
+        const status = isSolanaError(e, SOLANA_ERROR__RPC__TRANSPORT_HTTP_ERROR)
+          ? e.context.statusCode
+          : null;
+        const transient = status === null ? e instanceof TypeError : status === 429 || status >= 500;
+        if (!transient || attempt >= delaysMs.length || config.signal?.aborted) throw e;
+        await sleep(delaysMs[attempt] ?? 0);
+      }
+    }
+  }) as RpcTransport;
+}
+
 export class SolanaChain implements Chain {
   private readonly rpc;
   private cached: { at: number; value: ProgramState } | null = null;
@@ -104,7 +129,7 @@ export class SolanaChain implements Chain {
     private readonly signer: KeyPairSigner,
     private readonly maxPriorityFee: bigint,
   ) {
-    this.rpc = createSolanaRpc(rpcUrl);
+    this.rpc = createSolanaRpcFromTransport(retryingTransport(createDefaultRpcTransport({ url: rpcUrl })));
   }
 
   /** `keypair`: a path to a Solana CLI keypair file, or its JSON content (a secret env var on Fly.io). */
@@ -192,20 +217,28 @@ export class SolanaChain implements Chain {
     const started = Date.now();
     let lastSend = 0;
     while (Date.now() - started < timeoutMs) {
-      if (Date.now() - lastSend >= 2_000) {
+      const resent = Date.now() - lastSend >= 2_000;
+      if (resent) {
         lastSend = Date.now();
         await this.rpc
           .sendTransaction(wire, { encoding: "base64", skipPreflight: true, maxRetries: 0n })
           .send()
           .catch(() => {});
       }
-      await sleep(250);
-      const { value } = await this.rpc.getSignatureStatuses([signature]).send();
-      const st = value[0];
+      await sleep(500);
+      // undefined: the RPC didn't answer this poll; keep waiting until the timeout.
+      const st = await this.rpc
+        .getSignatureStatuses([signature])
+        .send()
+        .then(
+          ({ value }) => value[0] ?? null,
+          () => undefined,
+        );
       if (st?.err) return { kind: "failed", err: st.err };
       if (st && (st.confirmationStatus === "confirmed" || st.confirmationStatus === "finalized"))
         return { kind: "confirmed" };
-      if (!st && (await this.blockHeight()) > lastValidBlockHeight) return { kind: "timeout" };
+      if (st === null && resent && (await this.blockHeight().catch(() => 0n)) > lastValidBlockHeight)
+        return { kind: "timeout" };
     }
     return { kind: "timeout" };
   }
