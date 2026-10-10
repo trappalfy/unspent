@@ -5,8 +5,17 @@ packages:
   - tests/*
   - ops
 
+# embedded-postgres is only the local dev database (packages/db devdb, on the owner's Mac): its build script runs
+# there and nowhere else (Vercel, CI and the Docker image install the Linux package without it).
 allowBuilds:
   '@embedded-postgres/darwin-arm64': true
+  '@embedded-postgres/darwin-x64': false
+  '@embedded-postgres/linux-arm': false
+  '@embedded-postgres/linux-arm64': false
+  '@embedded-postgres/linux-ia32': false
+  '@embedded-postgres/linux-ppc64': false
+  '@embedded-postgres/linux-x64': false
+  '@embedded-postgres/windows-x64': false
   bufferutil: false
   esbuild: true
   utf-8-validate: false
