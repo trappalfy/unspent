@@ -45,9 +45,6 @@ const vars: Record<string, string> = {
   JUPITER_API_KEY: owner.JUPITER_API_KEY ?? "",
   TOKEN_SYMBOL: launch ? need("TOKEN_SYMBOL", owner.TOKEN_SYMBOL) : "TST",
   SITE_ACCESS_KEY: launch ? "" : prev.SITE_ACCESS_KEY || randomBytes(18).toString("base64url"),
-  LEGAL_ENTITY: owner.LEGAL_ENTITY ?? "",
-  CONTACT_EMAIL: owner.CONTACT_EMAIL ?? "",
-  GOVERNING_LAW: owner.GOVERNING_LAW ?? "",
 };
 writeFileSync(
   out,

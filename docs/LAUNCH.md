@@ -24,7 +24,6 @@
 | Адрес кошелька админа, лучше Ledger | `admin`, upgrade authority, казна, метаданные токена | `ADMIN` |
 | Аккаунты Fly.io, Vercel, Neon | хостинг (Q11) | — |
 | Webhook для алертов: Discord, Slack или Telegram (`https://api.telegram.org/bot<токен>/sendMessage?chat_id=<id>`) | алерты шлюза, приходят текстом | `ALERT_WEBHOOK_URL` |
-| Юрлицо, контактный email, применимое право | черновики Terms и Privacy уже на сайте, эти три значения подставляются | `LEGAL_ENTITY`, `CONTACT_EMAIL`, `GOVERNING_LAW` на Vercel |
 
 ## 2. Ключи
 
@@ -79,7 +78,6 @@
    | `RPC_URL` | Helius |
    | `JUPITER_API_KEY` | ключ Jupiter |
    | `TOKEN_SYMBOL` | символ кредита (тот же, что в `launch.ts`) |
-   | `LEGAL_ENTITY`, `CONTACT_EMAIL`, `GOVERNING_LAW` | для Terms и Privacy; без них продакшен-сборка открытого сайта не пройдёт |
 
    Сайт можно выложить сразу в режиме `PRELAUNCH=true`: Docs открыты, `/app` закрыт.
 
@@ -191,7 +189,7 @@ ops/rehearse.sh                     # или RUN_UI=1 ops/rehearse.sh — плю
   - Украина разрешена целиком: база по странам не различает регионы, исключённые Anthropic.
 
   Список стоит сверять со страницей Anthropic перед запуском.
-- **Terms и Privacy** — черновики на сайте. Их нужно прочитать, лучше показать юристу, и задать `LEGAL_ENTITY`, `CONTACT_EMAIL`, `GOVERNING_LAW`.
+- **Terms и Privacy** — тексты на сайте, связь через X (решение владельца: без юрлица, email и применимого права).
 - **Символ токена (Q1) и домен (Q10).**
 
 ## 10. Закрытие и возврат SOL
