@@ -90,7 +90,8 @@ if (!mintInfo.value) {
             updateAuthority: admin,
             name: env("TOKEN_NAME", "Unspent Credit"),
             symbol: env("TOKEN_SYMBOL"),
-            uri: env("TOKEN_URI"),
+            // Empty while the app is tested under neutral metadata (owner, 2026-10-10); set on launch day.
+            uri: process.env.TOKEN_URI ?? "",
           }),
         ]),
     getSetAuthorityInstruction({

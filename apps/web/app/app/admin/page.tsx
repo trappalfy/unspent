@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AdminPanel } from "@/components/app/AdminPanel";
 import { PageTitle } from "@/components/app/ui";
-import { countReservations, readHolders, readProgramCode, readReserveBalances } from "@/lib/chain/read";
+import {
+  countReservations,
+  readHolders,
+  readProgramCode,
+  readReserveBalances,
+  readTokenMetadata,
+} from "@/lib/chain/read";
 import { chainNow } from "@/lib/server/clock";
 import { getProgram } from "@/lib/server/program";
 import { serverRpc } from "@/lib/server/rpc";
@@ -15,13 +21,14 @@ export default async function AdminPage() {
   const [session, program] = await Promise.all([getSession(), getProgram(0)]);
   if (!session || !program || program.admin !== session.address) notFound();
   const rpc = serverRpc();
-  const [code, balances, holds, now, holders] = await Promise.all([
+  const [code, balances, holds, now, holders, metadata] = await Promise.all([
     readProgramCode(rpc),
     readReserveBalances(rpc, program),
     countReservations(rpc),
     chainNow(),
     // Only needed for closing, which comes after shutdown.
     program.shutDown ? readHolders(rpc, program) : Promise.resolve([]),
+    readTokenMetadata(rpc, program.creditMint),
   ]);
   return (
     <>
@@ -34,6 +41,7 @@ export default async function AdminPage() {
         code={code}
         balances={{ ...balances, holds }}
         holders={holders}
+        metadata={metadata}
         now={now}
       />
     </>

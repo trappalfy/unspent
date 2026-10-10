@@ -53,6 +53,11 @@ done
 solana airdrop 20 keys/localnet-deployer-keypair.json --url $U >/dev/null
 solana airdrop 5 keys/localnet-gateway-keypair.json --url $U >/dev/null
 solana airdrop 5 keys/localnet-admin-keypair.json --url $U >/dev/null
+# The program is live on mainnet: an online fork pulls it with the mainnet deployer as its upgrade authority. Hand that
+# authority to the local deployer on the fork (a Surfpool cheatcode; mainnet is untouched), so the local build
+# replaces it as an upgrade. Offline there is nothing to hand over.
+PROGRAM_ID=$(solana-keygen pubkey keys/unspent-program-keypair.json)
+curl -s -X POST $U -H 'content-type: application/json' -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"surfnet_setProgramAuthority\",\"params\":[\"$PROGRAM_ID\",\"$(solana-keygen pubkey keys/localnet-deployer-keypair.json)\"]}" >/dev/null || true
 # The fork fetches mainnet accounts while the deploy runs; a dropped remote fetch fails it, so retry a few times.
 for try in 1 2 3; do
   OUT=$(solana program deploy "$V2" --skip-feature-verify --program-id keys/unspent-program-keypair.json \

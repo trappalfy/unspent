@@ -6,6 +6,8 @@
 
 **Решение владельца, 2026-10-10: это тестовый запуск, SOL должен вернуться.** Обновления **не замораживаем** (Q12 снят): только с правом обновления программу можно закрыть и забрать её депозит. В конце — порядок из раздела 10, возвращается около 98% вложенного SOL.
 
+**Решение владельца, 2026-10-10: сначала тест на mainnet под нейтральными данными.** Программа задеплоена заранее (`ops/deployments/mainnet-program.json`). Токен создаётся как «Test Credit» / `TST` с пустым URI метаданных, сайт работает на тестовом домене за ключом доступа (`SITE_ACCESS_KEY`: без `?access=<ключ>` любая страница отвечает 404). В день открытия: `/app/admin` → Token → Fill in the launch name and URI, настоящий символ → Update token metadata; затем настоящий домен на Vercel и Fly, `SITE_ACCESS_KEY` убрать.
+
 **Правило 0.3:** каждый шаг с пометкой **[GO]** отправляет транзакции в mainnet или платные запросы провайдеру. Его делаем только по явному «go» владельца в момент выполнения. Скрипты сами отказываются работать с mainnet без `CONFIRM_MAINNET=yes`.
 
 ## 1. Что нужно от владельца
@@ -105,13 +107,15 @@ export NETWORK=mainnet RPC_URL=https://mainnet.helius-rpc.com/?api-key=… WS_UR
    ```
    Если p95 заметно больше 3 с — обсуждаем резерв на пачку запросов (раздел 15 брифа).
 
-2. **[GO] Деплой программы, `initialize` и передача права обновления** — одной серией, без пауз. Вызвать `initialize` может только upgrade authority, поэтому перехватить его нельзя. `launch.ts` сразу после `initialize` передаёт upgrade authority кошельку админа: у деплоера не остаётся прав.
+2. **[GO] Деплой программы, затем `initialize` и передача права обновления.** Деплой сделан 2026-10-10 (`ops/deployments/mainnet-program.json`, код совпадает со сборкой). До `initialize` право обновления у деплоера, и вызвать `initialize` может только он, поэтому перехватить запуск нельзя. `launch.ts` сразу после `initialize` передаёт upgrade authority кошельку админа: у деплоера не остаётся прав.
    ```bash
    solana program deploy target/deploy/unspent.so --program-id keys/unspent-program-keypair.json \
      -k keys/mainnet-deployer-keypair.json --url "$RPC_URL" --with-compute-unit-price 50000 --max-sign-attempts 50
    CONFIRM_MAINNET=yes ADMIN=<кошелёк админа> GATEWAY=<ключ шлюза> \
-     TOKEN_SYMBOL=<символ> TOKEN_URI=https://<домен>/token.json pnpm --filter @unspent/ops launch
+     TOKEN_NAME="Test Credit" TOKEN_SYMBOL=TST TOKEN_URI= pnpm --filter @unspent/ops launch
    ```
+   На время теста данные токена нейтральные; настоящие (`Unspent Credit`, символ, `https://<домен>/token.json`) ставятся в день открытия на `/app/admin` → Token.
+
    Казна по умолчанию — USDC-аккаунт кошелька админа (`TREASURY_OWNER` можно задать отдельно). Адреса минта, казны и Config пишутся в `ops/deployments/mainnet.json`: этот файл коммитим.
 
 3. **Проверка развёртывания** (только чтение):

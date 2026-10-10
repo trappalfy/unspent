@@ -18,15 +18,18 @@ import {
 } from "@solana-program/token";
 import {
   type ConfigField,
+  decodeMetadata,
   decodeUpgradeAuthority,
   fetchMaybeConfig,
   fetchMaybeUserAccount,
   findConfigPda,
+  findMetadataAddress,
   findProgramDataAddress,
   findUserPda,
   getReservationDecoder,
   getUserAccountDecoder,
   RESERVATION_DISCRIMINATOR,
+  type TokenMetadata,
   UNSPENT_PROGRAM_ADDRESS,
   USER_ACCOUNT_DISCRIMINATOR,
 } from "@unspent/program";
@@ -150,6 +153,14 @@ export async function readProgramCode(rpc: AppRpc): Promise<ProgramCode> {
   if (!value) return { closed: true, authority: null, rentLamports: 0n };
   const data = getBase64Encoder().encode(value.data[0]) as Uint8Array;
   return { closed: false, authority: decodeUpgradeAuthority(data), rentLamports: value.lamports };
+}
+
+/** The credit token's Metaplex metadata; null where there is none (an offline local fork). */
+export async function readTokenMetadata(rpc: AppRpc, mint: Address): Promise<TokenMetadata | null> {
+  const { value } = await rpc
+    .getAccountInfo(await findMetadataAddress(mint), { encoding: "base64", commitment: "confirmed" })
+    .send();
+  return value ? decodeMetadata(getBase64Encoder().encode(value.data[0]) as Uint8Array) : null;
 }
 
 export async function readUser(rpc: AppRpc, owner: string): Promise<UserState> {

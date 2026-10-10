@@ -24,14 +24,16 @@ import {
   getSetUpgradeAuthorityInstruction,
   getShutdownInstructionAsync,
   getSweepSurplusInstructionAsync,
+  getUpdateMetadataInstruction,
   getUpgradeProgramInstruction,
   PauseTarget,
+  type TokenMetadata,
 } from "@unspent/program";
 import { type ReactNode, useId, useState } from "react";
 import { browserRpc } from "@/lib/chain/browser";
 import type { Holder, PendingRow, ProgramCode, ProgramState } from "@/lib/chain/read";
 import { prepare } from "@/lib/chain/tx";
-import { explorerAddress } from "@/lib/env";
+import { explorerAddress, publicEnv } from "@/lib/env";
 import { exactCredits, formatSol, formatUnits, parseUnits } from "@/lib/format";
 import { TxButton, TxDone, useTxPlan } from "./Tx";
 import { Notice, Panel, Preview } from "./ui";
@@ -42,6 +44,7 @@ type Props = {
   code: ProgramCode;
   balances: { reserveUsdc: bigint; vaultCredits: bigint; holds: number };
   holders: Holder[];
+  metadata: TokenMetadata | null;
   now: number;
 };
 
@@ -160,7 +163,7 @@ function Field({ label, children }: { label: string; children: (id: string) => R
   );
 }
 
-export function AdminPanel({ admin, program: p, code, balances, holders, now }: Props) {
+export function AdminPanel({ admin, program: p, code, balances, holders, metadata, now }: Props) {
   const upgradeAuthority = code.authority;
   const signer = createNoopSigner(address(admin));
   const [limitField, setLimitField] = useState<ConfigField>(ConfigField.MaxReservation);
@@ -168,6 +171,11 @@ export function AdminPanel({ admin, program: p, code, balances, holders, now }: 
   const [backupKey, setBackupKey] = useState("");
   const [treasuryOwner, setTreasuryOwner] = useState("");
   const [buffer, setBuffer] = useState("");
+  const [token, setToken] = useState({
+    name: metadata?.name ?? "",
+    symbol: metadata?.symbol ?? "",
+    uri: metadata?.uri ?? "",
+  });
   const limit = LIMITS.find((l) => l.field === limitField) ?? LIMITS[0]!;
   const act = { admin };
 
@@ -407,6 +415,66 @@ export function AdminPanel({ admin, program: p, code, balances, holders, now }: 
           </Action>
         )}
       </Panel>
+
+      {metadata && (
+        <Panel title="Token">
+          <Preview
+            rows={[
+              ["Name", metadata.name || "none"],
+              ["Symbol", metadata.symbol || "none"],
+              ["Metadata URI", metadata.uri ? <span className="break-all">{metadata.uri}</span> : "none"],
+            ]}
+          />
+          {metadata.updateAuthority !== admin ? (
+            <p className="text-sm text-mute">Another key holds the metadata update authority.</p>
+          ) : (
+            <>
+              <p className="text-sm text-mute">
+                Wallets and explorers show these. They pick up a change within minutes to hours.
+              </p>
+              <div className="flex flex-col gap-3 md:flex-row">
+                {(["name", "symbol", "uri"] as const).map((k) => (
+                  <Field key={k} label={k === "uri" ? "Metadata URI" : k[0]!.toUpperCase() + k.slice(1)}>
+                    {(id) => (
+                      <input
+                        id={id}
+                        className="input"
+                        value={token[k]}
+                        onChange={(e) => setToken({ ...token, [k]: e.target.value })}
+                        autoComplete="off"
+                        spellCheck={false}
+                      />
+                    )}
+                  </Field>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="self-start text-sm text-mute underline"
+                onClick={() =>
+                  setToken({ ...token, name: "Unspent Credit", uri: `${publicEnv.siteUrl}/token.json` })
+                }
+              >
+                Fill in the launch name and URI
+              </button>
+              <Action
+                {...act}
+                id={`metadata:${token.name}:${token.symbol}:${token.uri}`}
+                label="Update token metadata"
+                build={async () => [
+                  await getUpdateMetadataInstruction({
+                    mint: p.creditMint,
+                    updateAuthority: signer,
+                    name: token.name.trim(),
+                    symbol: token.symbol.trim(),
+                    uri: token.uri.trim(),
+                  }),
+                ]}
+              />
+            </>
+          )}
+        </Panel>
+      )}
 
       <Panel title="Treasury">
         <p className="text-sm text-mute">

@@ -16,7 +16,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createSolanaRpc, generateKeyPairSigner, getAddressFromPublicKey } from "@solana/kit";
 import { chromium, type Page } from "playwright-core";
-import { readProgram, readProgramCode, readReserveBalances } from "../../apps/web/lib/chain/read";
+import {
+  readProgram,
+  readProgramCode,
+  readReserveBalances,
+  readTokenMetadata,
+} from "../../apps/web/lib/chain/read";
 import { axe, describe } from "./axe";
 import { cheat, installWallet, until, walletFromKeypairFile } from "./wallet";
 
@@ -186,6 +191,24 @@ async function main() {
     ok("backup key proposed → pending", true);
     await act("Cancel: Backup gateway key", async () => (await state()).pending.length === 0);
     ok("backup key cancelled", true);
+
+    // 5b. Token metadata: tested under a neutral name, renamed on launch day (needs Metaplex: online fork only)
+    if (await readTokenMetadata(rpc, start.creditMint)) {
+      await act(
+        "Update token metadata",
+        async () => (await readTokenMetadata(rpc, start.creditMint))?.symbol === "UCRED",
+        undefined,
+        async (pg) => {
+          await pg.getByRole("button", { name: "Fill in the launch name and URI" }).click();
+          await pg.getByLabel("Symbol").fill("UCRED");
+        },
+      );
+      const m = await readTokenMetadata(rpc, start.creditMint);
+      ok(
+        `token metadata → ${m?.name} / ${m?.symbol} / ${m?.uri}`,
+        m?.name === "Unspent Credit" && m.uri === `${WEB}/token.json`,
+      );
+    } else console.log("· skipped token metadata: no Metaplex on an offline fork");
 
     // 6. Layout and accessibility of the page
     for (const width of [390, 1280]) {
