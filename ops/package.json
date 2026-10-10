@@ -8,7 +8,8 @@
     "typecheck": "tsc -p .",
     "test": "echo 'run pnpm cycle against a local validator'",
     "latency": "tsx latency.ts",
-    "verify": "tsx verify.ts"
+    "verify": "tsx verify.ts",
+    "vercel-env": "tsx vercel-env.ts"
   },
   "dependencies": {
     "@solana-program/compute-budget": "^0.19.0",

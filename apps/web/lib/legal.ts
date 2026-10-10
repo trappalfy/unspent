@@ -9,7 +9,9 @@ export const legal = {
 
 export const LEGAL_UPDATED = "October 9, 2026";
 
+/** A test site behind SITE_ACCESS_KEY isn't open to the public, so it may run with the placeholders. */
 export function assertLegalComplete(prelaunch: boolean) {
+  if (process.env.SITE_ACCESS_KEY) return;
   const missing = Object.entries({
     LEGAL_ENTITY: legal.entity,
     CONTACT_EMAIL: legal.email,

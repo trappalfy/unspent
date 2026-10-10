@@ -1,0 +1,16 @@
+# Vercel CLI uploads from this folder: never secrets, keys or build leftovers (the site builds from apps/web).
+/keys
+.env
+.env.*
+!.env.example
+*-keypair.json
+/target
+/programs
+/brand
+/ops/deployments/localnet*.json
+/.data
+**/node_modules
+**/.next
+**/.turbo
+**/coverage
+.DS_Store
