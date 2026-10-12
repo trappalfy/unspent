@@ -108,7 +108,7 @@ export NETWORK=mainnet RPC_URL=https://mainnet.helius-rpc.com/?api-key=… WS_UR
    CONFIRM_MAINNET=yes ADMIN=<кошелёк админа> GATEWAY=<ключ шлюза> \
      TOKEN_NAME="Test Credit" TOKEN_SYMBOL=TST TOKEN_URI= pnpm --filter @unspent/ops launch
    ```
-   На время теста данные токена нейтральные; настоящие (`Unspent Credit`, символ, `https://<домен>/token.json`) ставятся в день открытия на `/app/admin` → Token.
+   На время теста данные токена нейтральные; настоящие (`Credit`, символ `CREDIT`, `https://<домен>/token.json`) ставятся в день открытия на `/app/admin` → Token.
 
    Казна по умолчанию — USDC-аккаунт кошелька админа (`TREASURY_OWNER` можно задать отдельно). Адреса минта, казны и Config пишутся в `ops/deployments/mainnet.json`: этот файл коммитим.
 

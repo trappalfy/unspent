@@ -88,7 +88,7 @@ if (!mintInfo.value) {
             mintAuthority: deployer,
             payer: deployer,
             updateAuthority: admin,
-            name: env("TOKEN_NAME", "Unspent Credit"),
+            name: env("TOKEN_NAME", "Credit"),
             symbol: env("TOKEN_SYMBOL"),
             // Empty while the app is tested under neutral metadata (owner, 2026-10-10); set on launch day.
             uri: process.env.TOKEN_URI ?? "",

@@ -460,9 +460,7 @@ export function AdminPanel({ admin, program: p, code, balances, holders, metadat
               <button
                 type="button"
                 className="self-start text-sm text-mute underline"
-                onClick={() =>
-                  setToken({ ...token, name: "Unspent Credit", uri: `${publicEnv.siteUrl}/token.json` })
-                }
+                onClick={() => setToken({ ...token, name: "Credit", uri: `${publicEnv.siteUrl}/token.json` })}
               >
                 Fill in the launch name and URI
               </button>

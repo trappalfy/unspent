@@ -6,7 +6,7 @@ export const dynamic = "force-static";
 
 export function GET() {
   return Response.json({
-    name: "Unspent Credit",
+    name: "Credit",
     symbol: process.env.TOKEN_SYMBOL ?? "",
     description:
       "1 credit = $1 of AI inference through the Unspent API. Each credit in circulation is backed by 1 USDC in the program's reserve.",

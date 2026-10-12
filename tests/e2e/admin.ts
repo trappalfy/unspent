@@ -196,17 +196,17 @@ async function main() {
     if (await readTokenMetadata(rpc, start.creditMint)) {
       await act(
         "Update token metadata",
-        async () => (await readTokenMetadata(rpc, start.creditMint))?.symbol === "UCRED",
+        async () => (await readTokenMetadata(rpc, start.creditMint))?.symbol === "CREDIT",
         undefined,
         async (pg) => {
           await pg.getByRole("button", { name: "Fill in the launch name and URI" }).click();
-          await pg.getByLabel("Symbol").fill("UCRED");
+          await pg.getByLabel("Symbol").fill("CREDIT");
         },
       );
       const m = await readTokenMetadata(rpc, start.creditMint);
       ok(
         `token metadata → ${m?.name} / ${m?.symbol} / ${m?.uri}`,
-        m?.name === "Unspent Credit" && m.uri === `${WEB}/token.json`,
+        m?.name === "Credit" && m.uri === `${WEB}/token.json`,
       );
     } else console.log("· skipped token metadata: no Metaplex on an offline fork");
 
