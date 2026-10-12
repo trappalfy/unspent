@@ -9,7 +9,8 @@ export const publicEnv = {
   apiHost: process.env.NEXT_PUBLIC_API_HOST ?? "localhost:8787",
   xUrl: process.env.NEXT_PUBLIC_X_URL ?? "",
   prelaunch: process.env.NEXT_PUBLIC_PRELAUNCH === "true",
-  projectTokenCa: process.env.NEXT_PUBLIC_PROJECT_TOKEN_CA || null,
+  // The project token (separate from credits, gives nothing in Unspent); the env var overrides it.
+  projectTokenCa: process.env.NEXT_PUBLIC_PROJECT_TOKEN_CA || "3DruFt8Bm8KPZjHWiqKFT5eLwy2RsGVTHDigtjLnpump",
 };
 
 /** Base URL of the API for code samples: https unless it's a local host. */

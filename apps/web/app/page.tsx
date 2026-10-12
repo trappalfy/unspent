@@ -2,6 +2,7 @@ import { formatCredits } from "@unspent/shared";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AsciiHero } from "@/components/ascii-hero/AsciiHero";
+import { CopyButton } from "@/components/CopyButton";
 import { CodeTabs } from "@/components/landing/CodeTabs";
 import { Faq } from "@/components/landing/Faq";
 import { LogsBackdrop } from "@/components/landing/LogsBackdrop";
@@ -86,6 +87,15 @@ export default async function Home() {
               </Link>
             </div>
             <p className="text-xs text-mute">1 credit = $1 of inference · no expiry · settled onchain</p>
+            {publicEnv.projectTokenCa && (
+              <div className="flex flex-col gap-2 text-xs text-mute">
+                <span>Project token CA</span>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="break-all text-fg">{publicEnv.projectTokenCa}</span>
+                  <CopyButton value={publicEnv.projectTokenCa} />
+                </div>
+              </div>
+            )}
           </div>
         </Container>
       </AsciiHero>
