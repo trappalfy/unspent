@@ -1,0 +1,12 @@
+{
+  "network": "mainnet",
+  "program": "5cAGVVyJPrFMDeEcEfbm3jUZFHuarrLLdUUYtm6VxShm",
+  "creditMint": "7Zw7aL17MbJ4WqVKBcURJKc6tGjcV8z1CHEx44Wxer68",
+  "usdcMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  "config": "ATBDeNs2k8eqrDJ6igbKAcdcwV2UKAc2NVrJkSASD9DE",
+  "treasury": "6DDyY4bVh1W7rURPB9qmCwdUKmN8StHuZMN5REruyTmM",
+  "treasuryOwner": "9PeMBb8kkpRDwRDEQYREgQkqkJKKmbMx1wXzFmoyHNcM",
+  "admin": "9PeMBb8kkpRDwRDEQYREgQkqkJKKmbMx1wXzFmoyHNcM",
+  "gateway": "ELcmdPuoCko4b8qBu2GZtJ1TBWLv7YBkBFVL9hWduhUu",
+  "initializedAt": "2026-10-14T16:23:38.195Z"
+}

@@ -1,0 +1,11 @@
+{
+  "network": "mainnet",
+  "program": "5cAGVVyJPrFMDeEcEfbm3jUZFHuarrLLdUUYtm6VxShm",
+  "deployedAt": "2026-10-14",
+  "slot": 456903399,
+  "sha256": "1b393b30db48908b07d8afafb0264b67d6baaa6c31fd420f30fd224bb353c243",
+  "bytes": 466728,
+  "upgradeAuthority": "9PeMBb8kkpRDwRDEQYREgQkqkJKKmbMx1wXzFmoyHNcM",
+  "programDataRentSol": 2.37185708,
+  "initialized": true
+}
