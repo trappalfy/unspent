@@ -24,10 +24,10 @@ rm -f ../keys/localnet-credit-mint-keypair.json
 
 say "2. Launch: credit mint + metadata → mint authority to Config → treasury → initialize → upgrade authority to admin"
 ADMIN="$(cd .. && pub admin)" GATEWAY="$(cd .. && pub gateway)" \
-  TOKEN_SYMBOL=TEST TOKEN_URI=http://localhost:3000/token.json $TSX launch.ts
+  TOKEN_SYMBOL=TEST TOKEN_URI=http://localhost:3000/token.json SKIP_METADATA="${OFFLINE:-}" $TSX launch.ts
 
 say "3. Verify the deployment"
-$TSX verify.ts
+SKIP_METADATA="${OFFLINE:-}" $TSX verify.ts
 
 if [ "${RUN_UI:-}" = "1" ]; then
   say "4. User-side browser e2e on the launched program"

@@ -101,7 +101,10 @@ check(
 check("credit mint: no freeze authority", mint.freezeAuthority.__option === "None");
 console.log(`  supply ${mint.supply} μcr`);
 const meta = await b64(await metadataAddress(c.creditMint));
-if (!meta) check("Metaplex metadata exists", false);
+// An offline local fork has no Metaplex program (launch.ts SKIP_METADATA); everywhere else metadata is required.
+if (!meta && process.env.SKIP_METADATA === "1" && network === "localnet")
+  console.log("· skipped Metaplex metadata: offline local fork");
+else if (!meta) check("Metaplex metadata exists", false);
 else {
   const d = meta.data;
   let o = 65;

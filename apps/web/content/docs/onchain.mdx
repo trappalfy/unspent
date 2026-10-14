@@ -65,7 +65,7 @@ import { createSolanaRpc, getProgramDerivedAddress } from "@solana/kit";
 
 const requestId = "3f9c0e…"; // x-unspent-request-id
 const [reservation] = await getProgramDerivedAddress({
-  programAddress: "5YSrsYtX6UnSx8KAbiD8RWM7UzNNXU3w5QhxSA2vvfkx",
+  programAddress: "5cAGVVyJPrFMDeEcEfbm3jUZFHuarrLLdUUYtm6VxShm",
   seeds: ["res", Uint8Array.from(Buffer.from(requestId, "hex"))],
 });
 const rpc = createSolanaRpc("https://api.mainnet-beta.solana.com");

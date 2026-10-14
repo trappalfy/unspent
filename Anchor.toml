@@ -6,10 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-unspent = "5YSrsYtX6UnSx8KAbiD8RWM7UzNNXU3w5QhxSA2vvfkx"
+unspent = "5cAGVVyJPrFMDeEcEfbm3jUZFHuarrLLdUUYtm6VxShm"
 
 [programs.mainnet]
-unspent = "5YSrsYtX6UnSx8KAbiD8RWM7UzNNXU3w5QhxSA2vvfkx"
+unspent = "5cAGVVyJPrFMDeEcEfbm3jUZFHuarrLLdUUYtm6VxShm"
 
 [provider]
 cluster = "localnet"

@@ -14,7 +14,7 @@ pub use constants::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("5YSrsYtX6UnSx8KAbiD8RWM7UzNNXU3w5QhxSA2vvfkx");
+declare_id!("5cAGVVyJPrFMDeEcEfbm3jUZFHuarrLLdUUYtm6VxShm");
 
 #[program]
 pub mod unspent {

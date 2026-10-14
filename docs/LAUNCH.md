@@ -101,7 +101,7 @@ export NETWORK=mainnet RPC_URL=https://mainnet.helius-rpc.com/?api-key=… WS_UR
    ```
    Если p95 заметно больше 3 с — обсуждаем резерв на пачку запросов (раздел 15 брифа).
 
-2. **[GO] Деплой программы, затем `initialize` и передача права обновления.** Деплой сделан 2026-10-10 (`ops/deployments/mainnet-program.json`, код совпадает со сборкой). До `initialize` право обновления у деплоера, и вызвать `initialize` может только он, поэтому перехватить запуск нельзя. `launch.ts` сразу после `initialize` передаёт upgrade authority кошельку админа: у деплоера не остаётся прав.
+2. **[GO] Деплой программы, затем `initialize` и передача права обновления.** Первая программа (`5YSrs…vfkx`, `ops/deployments/mainnet-v1.json`, `mainnet-program-v1.json`) закрыта владельцем 2026-10-14 с деньгами внутри (22.25 USDC остались в её резерве навсегда); закрытый адрес повторно не развернуть, поэтому вторая программа — `5cAGVVyJPrFMDeEcEfbm3jUZFHuarrLLdUUYtm6VxShm` (ключ `keys/unspent-program-keypair.json`, старый — `keys/unspent-program-v1-keypair.json`). До `initialize` право обновления у деплоера, и вызвать `initialize` может только он, поэтому перехватить запуск нельзя. `launch.ts` сразу после `initialize` передаёт upgrade authority кошельку админа: у деплоера не остаётся прав.
    ```bash
    solana program deploy target/deploy/unspent.so --program-id keys/unspent-program-keypair.json \
      -k keys/mainnet-deployer-keypair.json --url "$RPC_URL" --with-compute-unit-price 50000 --max-sign-attempts 50
